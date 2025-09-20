@@ -33,7 +33,12 @@ class MainActivity : ComponentActivity() {
                     },
                     onLoginClick = {
                         startActivity(
-                            Intent(this, LoginActivity::class.java) // ✅ Nuevo botón
+                            Intent(this, LoginActivity::class.java) // ✅ Botón Login
+                        )
+                    },
+                    onRegisterClick = {
+                        startActivity(
+                            Intent(this, RegisterActivity::class.java) // ✅ Nuevo botón Registro
                         )
                     }
                 )
@@ -46,7 +51,8 @@ class MainActivity : ComponentActivity() {
 fun MainScreen(
     onQuickDonationClick: () -> Unit,
     onScheduleDonationClick: () -> Unit,
-    onLoginClick: () -> Unit
+    onLoginClick: () -> Unit,
+    onRegisterClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -73,12 +79,21 @@ fun MainScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // ✅ Nuevo botón para Login
         Button(
             onClick = onLoginClick,
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Ir a Login")
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // ✅ Botón para ir a Registro
+        Button(
+            onClick = onRegisterClick,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Ir a Registro")
         }
     }
 }

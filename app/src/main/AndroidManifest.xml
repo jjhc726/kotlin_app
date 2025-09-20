@@ -26,6 +26,7 @@
             android:name=".LoginActivity"
             android:exported="true"
             android:theme="@style/Theme.VistaQuickDonation"/>
+        <activity android:name=".RegisterActivity" />
     </application>
 
 </manifest>
