@@ -22,6 +22,10 @@
         </activity>
         <activity android:name=".ScheduleDonationActivity" />
         <activity android:name=".QuickDonationActivity" />
+        <activity
+            android:name=".LoginActivity"
+            android:exported="true"
+            android:theme="@style/Theme.VistaQuickDonation"/>
     </application>
 
 </manifest>

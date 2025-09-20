@@ -30,6 +30,11 @@ class MainActivity : ComponentActivity() {
                         startActivity(
                             Intent(this, ScheduleDonationActivity::class.java)
                         )
+                    },
+                    onLoginClick = {
+                        startActivity(
+                            Intent(this, LoginActivity::class.java) // ✅ Nuevo botón
+                        )
                     }
                 )
             }
@@ -40,7 +45,8 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainScreen(
     onQuickDonationClick: () -> Unit,
-    onScheduleDonationClick: () -> Unit
+    onScheduleDonationClick: () -> Unit,
+    onLoginClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -63,6 +69,16 @@ fun MainScreen(
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Ir a Schedule Donation")
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // ✅ Nuevo botón para Login
+        Button(
+            onClick = onLoginClick,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Ir a Login")
         }
     }
 }
