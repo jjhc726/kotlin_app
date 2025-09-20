@@ -1,3 +1,4 @@
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -31,8 +32,10 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions {
-        jvmTarget = "11"
+    kotlin {
+        jvmToolchain {
+            languageVersion.set(JavaLanguageVersion.of(11))
+        }
     }
     buildFeatures {
         compose = true
@@ -40,7 +43,8 @@ android {
 }
 
 dependencies {
-    implementation("androidx.compose.material3:material3:<última versión>")
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
