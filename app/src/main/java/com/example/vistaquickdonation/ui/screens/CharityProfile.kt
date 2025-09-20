@@ -143,6 +143,14 @@ fun CharityProfileDesign() {
 
                 Spacer(Modifier.height(24.dp))
 
+                Button(
+                    onClick = { /* sin acción */ },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF003137))
+                ) {
+                    Text("Add to Favorite", color = Color.White)
+                }
+
             }
         }
     }
