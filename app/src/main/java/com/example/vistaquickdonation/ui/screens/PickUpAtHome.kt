@@ -2,7 +2,7 @@ package com.example.vistaquickdonation.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Scaffold
@@ -48,7 +49,8 @@ fun PickUpAtHomeDesign() {
             modifier = Modifier
                 .fillMaxSize()
                 .background(bgColor)
-                .padding(paddingValues)
+                .padding(paddingValues),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             /* Barra superior */
             Row(
@@ -75,7 +77,8 @@ fun PickUpAtHomeDesign() {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp)
-                    .background(Color.LightGray)
+                    .background(Color.White, shape = RoundedCornerShape(6.dp))
+                    .padding(start = 8.dp),
             )
 
             Spacer(Modifier.height(30.dp))
@@ -86,7 +89,8 @@ fun PickUpAtHomeDesign() {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp)
-                    .background(Color.LightGray)
+                    .background(Color.White, shape = RoundedCornerShape(6.dp))
+                    .padding(start = 8.dp),
             )
 
             Spacer(Modifier.height(30.dp))
@@ -96,13 +100,16 @@ fun PickUpAtHomeDesign() {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp)
-                    .background(Color.LightGray)
+                    .height(50.dp)
+                    .background(Color.White, shape = RoundedCornerShape(6.dp))
+                    .padding(start = 8.dp),
             )
+
             Spacer(Modifier.height(60.dp))
 
             Button(
                 onClick = { /* sin acción */ },
+                shape = RoundedCornerShape(6.dp),
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF003137))
             ) {
