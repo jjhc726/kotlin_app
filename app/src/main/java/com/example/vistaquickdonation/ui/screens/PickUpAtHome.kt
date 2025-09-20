@@ -1,6 +1,7 @@
 package com.example.vistaquickdonation.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Column
@@ -18,6 +19,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -25,8 +27,10 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun PickUpAtHomeDesign() {
-    val bgColor = Color(0xFFAFC7CA)
-    val secondColor = Color(0xFF003137)
+    val bgColor = Color(0xFFE6F0F2)
+    val primaryColor = Color(0xFF003137)
+    val accentColor = Color(0xFF0FA3B1)
+
     Scaffold(
         bottomBar = {
             Row(
@@ -38,10 +42,10 @@ fun PickUpAtHomeDesign() {
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Home", color = Color.Black)
-                Text("Campaigns", color = Color.Black)
-                Text("Profile", color = Color.Black)
-                Text("Settings", color = Color.Black)
+                Text("Home", color = primaryColor, fontWeight = FontWeight.Medium)
+                Text("Campaigns", color = primaryColor.copy(alpha = 0.7f))
+                Text("Profile", color = primaryColor.copy(alpha = 0.7f))
+                Text("Settings", color = primaryColor.copy(alpha = 0.7f))
             }
         }
     ) { paddingValues ->
@@ -49,71 +53,59 @@ fun PickUpAtHomeDesign() {
             modifier = Modifier
                 .fillMaxSize()
                 .background(bgColor)
-                .padding(paddingValues),
+                .padding(paddingValues)
+                .padding(horizontal = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            /* Barra superior */
-            Row(
+            // Barra superior
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(90.dp)
-                    .background(secondColor)
-                    .padding(horizontal = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .background(primaryColor),
+                contentAlignment = Alignment.Center
             ) {
-                Spacer(modifier = Modifier.weight(1f))
                 Text(
                     text = "PickUp At Home",
-                    fontSize = 25.sp,
+                    fontSize = 26.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White,
+                    color = Color.White
                 )
-                Spacer(modifier = Modifier.weight(1f))
-                Spacer(Modifier.height(20.dp))
             }
-            Text("Choose your location", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(4.dp))
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp)
-                    .background(Color.White, shape = RoundedCornerShape(6.dp))
-                    .padding(start = 8.dp),
-            )
 
-            Spacer(Modifier.height(30.dp))
+            Spacer(Modifier.height(32.dp))
 
-            Text("Select a Date", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(4.dp))
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp)
-                    .background(Color.White, shape = RoundedCornerShape(6.dp))
-                    .padding(start = 8.dp),
-            )
+            // Inputs
+            @Composable
+            fun InputCard(label: String) {
+                Text(label, fontSize = 18.sp, fontWeight = FontWeight.Medium, color = primaryColor)
+                Spacer(Modifier.height(8.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp)
+                        .background(Color.White, shape = RoundedCornerShape(12.dp))
+                        .border(1.dp, accentColor.copy(alpha = 0.4f), shape = RoundedCornerShape(12.dp))
+                        .padding(start = 16.dp),
+                )
+                Spacer(Modifier.height(24.dp))
+            }
 
-            Spacer(Modifier.height(30.dp))
+            InputCard("Choose your location")
+            InputCard("Select a Date")
+            InputCard("Select a Time")
 
-            Text("Select a time", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(4.dp))
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
-                    .background(Color.White, shape = RoundedCornerShape(6.dp))
-                    .padding(start = 8.dp),
-            )
-
-            Spacer(Modifier.height(60.dp))
+            Spacer(Modifier.height(16.dp))
 
             Button(
-                onClick = { /* sin acción */ },
-                shape = RoundedCornerShape(6.dp),
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF003137))
+                onClick = { /* acción */ },
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
             ) {
-                Text("Confirm", color = Color.White)
+                Text("Confirm", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
             }
 
             Spacer(Modifier.height(24.dp))
