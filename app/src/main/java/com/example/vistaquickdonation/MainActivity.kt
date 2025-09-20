@@ -33,12 +33,22 @@ class MainActivity : ComponentActivity() {
                     },
                     onLoginClick = {
                         startActivity(
-                            Intent(this, LoginActivity::class.java) // ✅ Botón Login
+                            Intent(this, LoginActivity::class.java) // ✅ Nuevo botón
                         )
                     },
                     onRegisterClick = {
                         startActivity(
-                            Intent(this, RegisterActivity::class.java) // ✅ Nuevo botón Registro
+                            Intent(this, RegisterActivity::class.java)
+                        )
+                    },
+                    onCharityProfileClick = {
+                        startActivity(
+                            Intent(this, CharityProfileActivity::class.java)
+                        )
+                    } ,
+                    onPickUpAtHomeClick = {
+                        startActivity(
+                            Intent(this, PickUpAtHomeActivity::class.java)
                         )
                     }
                 )
@@ -52,7 +62,9 @@ fun MainScreen(
     onQuickDonationClick: () -> Unit,
     onScheduleDonationClick: () -> Unit,
     onLoginClick: () -> Unit,
-    onRegisterClick: () -> Unit
+    onRegisterClick: () -> Unit,
+    onCharityProfileClick: () -> Unit,
+    onPickUpAtHomeClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -79,21 +91,31 @@ fun MainScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // ✅ Nuevo botón para Login
         Button(
             onClick = onLoginClick,
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Ir a Login")
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // ✅ Botón para ir a Registro
         Button(
             onClick = onRegisterClick,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Ir a Registro")
+            Text("Ir a Register")
+        }
+
+        Button(
+            onClick = onCharityProfileClick,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Ir a Charity Profile")
+        }
+        Button(
+            onClick = onPickUpAtHomeClick,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Ir a PickUpAtHome")
         }
     }
 }
