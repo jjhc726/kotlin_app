@@ -10,10 +10,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.VistaQuickDonation">
-        <activity
-            android:name=".CharityProfileActivity"></activity>
-        <activity
-            android:name=".PickUpAtHomeActivity"></activity>
+        <activity android:name=".HomePageActivity" />
+        <activity android:name=".CharityProfileActivity" />
+        <activity android:name=".PickUpAtHomeActivity" />
         <activity
             android:name=".MainActivity"
             android:exported="true"

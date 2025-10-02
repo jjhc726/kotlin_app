@@ -22,34 +22,25 @@ class MainActivity : ComponentActivity() {
             VistaQuickDonationTheme {
                 MainScreen(
                     onQuickDonationClick = {
-                        startActivity(
-                            Intent(this, QuickDonationActivity::class.java)
-                        )
+                        startActivity(Intent(this, QuickDonationActivity::class.java))
                     },
                     onScheduleDonationClick = {
-                        startActivity(
-                            Intent(this, ScheduleDonationActivity::class.java)
-                        )
+                        startActivity(Intent(this, ScheduleDonationActivity::class.java))
                     },
                     onLoginClick = {
-                        startActivity(
-                            Intent(this, LoginActivity::class.java) // ✅ Nuevo botón
-                        )
+                        startActivity(Intent(this, LoginActivity::class.java))
                     },
                     onRegisterClick = {
-                        startActivity(
-                            Intent(this, RegisterActivity::class.java)
-                        )
+                        startActivity(Intent(this, RegisterActivity::class.java))
                     },
                     onCharityProfileClick = {
-                        startActivity(
-                            Intent(this, CharityProfileActivity::class.java)
-                        )
-                    } ,
+                        startActivity(Intent(this, CharityProfileActivity::class.java))
+                    },
                     onPickUpAtHomeClick = {
-                        startActivity(
-                            Intent(this, PickUpAtHomeActivity::class.java)
-                        )
+                        startActivity(Intent(this, PickUpAtHomeActivity::class.java))
+                    },
+                    onHomePageClick = { // ✅ nuevo botón
+                        startActivity(Intent(this, HomePageActivity::class.java))
                     }
                 )
             }
@@ -64,7 +55,8 @@ fun MainScreen(
     onLoginClick: () -> Unit,
     onRegisterClick: () -> Unit,
     onCharityProfileClick: () -> Unit,
-    onPickUpAtHomeClick: () -> Unit
+    onPickUpAtHomeClick: () -> Unit,
+    onHomePageClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -73,49 +65,39 @@ fun MainScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Button(
-            onClick = onQuickDonationClick,
-            modifier = Modifier.fillMaxWidth()
-        ) {
+        Button(onClick = onQuickDonationClick, modifier = Modifier.fillMaxWidth()) {
             Text("Ir a Quick Donation")
         }
-
         Spacer(modifier = Modifier.height(16.dp))
 
-        Button(
-            onClick = onScheduleDonationClick,
-            modifier = Modifier.fillMaxWidth()
-        ) {
+        Button(onClick = onScheduleDonationClick, modifier = Modifier.fillMaxWidth()) {
             Text("Ir a Schedule Donation")
         }
-
         Spacer(modifier = Modifier.height(16.dp))
 
-        // ✅ Nuevo botón para Login
-        Button(
-            onClick = onLoginClick,
-            modifier = Modifier.fillMaxWidth()
-        ) {
+        Button(onClick = onLoginClick, modifier = Modifier.fillMaxWidth()) {
             Text("Ir a Login")
         }
-        Button(
-            onClick = onRegisterClick,
-            modifier = Modifier.fillMaxWidth()
-        ) {
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(onClick = onRegisterClick, modifier = Modifier.fillMaxWidth()) {
             Text("Ir a Register")
         }
+        Spacer(modifier = Modifier.height(16.dp))
 
-        Button(
-            onClick = onCharityProfileClick,
-            modifier = Modifier.fillMaxWidth()
-        ) {
+        Button(onClick = onCharityProfileClick, modifier = Modifier.fillMaxWidth()) {
             Text("Ir a Charity Profile")
         }
-        Button(
-            onClick = onPickUpAtHomeClick,
-            modifier = Modifier.fillMaxWidth()
-        ) {
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(onClick = onPickUpAtHomeClick, modifier = Modifier.fillMaxWidth()) {
             Text("Ir a PickUpAtHome")
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // ✅ Nuevo botón para ir a la página principal
+        Button(onClick = onHomePageClick, modifier = Modifier.fillMaxWidth()) {
+            Text("Ir a Página Principal")
         }
     }
 }
