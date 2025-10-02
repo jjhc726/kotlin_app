@@ -1,5 +1,6 @@
 package com.example.vistaquickdonation
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -8,19 +9,35 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.vistaquickdonation.ui.theme.*
+import com.example.vistaquickdonation.ui.theme.VistaQuickDonationTheme
+import kotlinx.coroutines.launch
+
+// Palette
+private val SoftBlue   = Color(0xFFAFC7CA) // background
+private val DeepBlue   = Color(0xFF003137) // primary
+private val Secondary  = Color(0xFF6F9AA0) // secondary
+private val AquaLight  = Color(0xFFBCEEF5)
+private val TealMedium = Color(0xFF3E6F75)
+private val TealDark   = Color(0xFF1B454B)
+private val White      = Color(0xFFFFFFFF)
 
 class HomePageActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             VistaQuickDonationTheme {
-                HomePageScreen()
+                Surface(modifier = Modifier.fillMaxSize(), color = SoftBlue) {
+                    HomePageScreen()
+                }
             }
         }
     }
@@ -28,74 +45,160 @@ class HomePageActivity : ComponentActivity() {
 
 @Composable
 fun HomePageScreen() {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(SoftBlue) // 🎨 Fondo con color de la paleta
-            .padding(24.dp),
-        verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = "Bienvenido a Quick Donation",
-            fontSize = 26.sp,
-            fontWeight = FontWeight.Bold,
-            color = DeepBlue
-        )
+    val context = LocalContext.current
+    val drawerState = rememberDrawerState(DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
 
-        Spacer(modifier = Modifier.height(24.dp))
+    fun go(clz: Class<*>) {
+        context.startActivity(Intent(context, clz))
+    }
 
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = AquaLight),
-            elevation = CardDefaults.cardElevation(6.dp)
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            ModalDrawerSheet(
+                drawerContainerColor = White,
+                drawerTonalElevation = 4.dp
             ) {
+                Spacer(Modifier.height(8.dp))
                 Text(
-                    "Haz donaciones rápidas y sencillas",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = TealDark
+                    "Menu",
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = DeepBlue
                 )
-                Spacer(modifier = Modifier.height(12.dp))
-                Button(
-                    onClick = { /* Aquí podrías redirigir a QuickDonationActivity */ },
-                    colors = ButtonDefaults.buttonColors(containerColor = MediumBlue)
-                ) {
-                    Text("Donar Ahora", color = White)
-                }
+
+                // Only the extra views you requested
+                NavigationDrawerItem(
+                    label = { Text("Go to Charity Profile") },
+                    selected = false,
+                    onClick = {
+                        scope.launch { drawerState.close() }
+                        go(CharityProfileActivity::class.java)
+                    }
+                )
+                NavigationDrawerItem(
+                    label = { Text("Go to Pick Up At Home") },
+                    selected = false,
+                    onClick = {
+                        scope.launch { drawerState.close() }
+                        go(PickUpAtHomeActivity::class.java)
+                    }
+                )
+
+                Spacer(Modifier.height(12.dp))
             }
         }
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = TealMedium),
-            elevation = CardDefaults.cardElevation(6.dp)
-        ) {
+    ) {
+        Scaffold { innerPadding ->
             Column(
-                modifier = Modifier.padding(16.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(SoftBlue)
+                    .padding(innerPadding)
+                    .padding(horizontal = 20.dp, vertical = 12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(
-                    "Agenda tu próxima donación",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = White
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-                Button(
-                    onClick = { /* Aquí podrías redirigir a ScheduleDonationActivity */ },
-                    colors = ButtonDefaults.buttonColors(containerColor = DeepBlue)
+
+                // Simple top bar (no extra deps)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Agendar", color = White)
+                    TextButton(onClick = { scope.launch { drawerState.open() } }) {
+                        Text("≡", color = DeepBlue, fontSize = 22.sp)
+                    }
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = "Recyclothes",
+                        color = DeepBlue,
+                        style = MaterialTheme.typography.headlineMedium
+                    )
                 }
+
+                Text(
+                    text = "Donate easily, make a real impact.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Secondary,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(Modifier.height(16.dp))
+
+                FeatureCard(
+                    container = AquaLight,
+                    titleColor = TealDark,
+                    title = "Make quick and simple donations",
+                    buttonText = "Donate Now",
+                    buttonColor = Secondary,
+                    onClick = { go(QuickDonationActivity::class.java) }
+                )
+
+                Spacer(Modifier.height(16.dp))
+
+                FeatureCard(
+                    container = TealMedium,
+                    titleColor = White,
+                    title = "Schedule your next donation",
+                    buttonText = "Schedule",
+                    buttonColor = DeepBlue,
+                    onClick = { go(ScheduleDonationActivity::class.java) }
+                )
+
+                Spacer(Modifier.weight(1f))
+
+                Text(
+                    text = "Made to reduce textile waste",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Secondary,
+                    modifier = Modifier.padding(bottom = 12.dp),
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun FeatureCard(
+    container: Color,
+    titleColor: Color,
+    title: String,
+    buttonText: String,
+    buttonColor: Color,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = container),
+        elevation = CardDefaults.cardElevation(6.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(18.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = title,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Medium,
+                color = titleColor
+            )
+            Spacer(Modifier.height(12.dp))
+            Button(
+                onClick = onClick,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = buttonColor,
+                    contentColor = White
+                ),
+                shape = RoundedCornerShape(24.dp),
+                modifier = Modifier
+                    .height(46.dp)
+                    .fillMaxWidth(0.6f)
+            ) {
+                Text(buttonText, style = MaterialTheme.typography.labelLarge)
             }
         }
     }
