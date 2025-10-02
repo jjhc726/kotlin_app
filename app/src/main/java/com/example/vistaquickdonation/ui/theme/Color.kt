@@ -7,3 +7,5 @@ val AquaLight   = Color(0xFFbceef5)
 val TealMedium  = Color(0xFF3e6f75)
 val TealDark    = Color(0xFF1b454b)
 val DeepBlue    = Color(0xFF003137)
+
+val White    = Color(0xFFFFFFFF)
