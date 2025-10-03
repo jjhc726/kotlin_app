@@ -1,21 +1,20 @@
 package com.example.vistaquickdonation
 
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import com.example.vistaquickdonation.ui.theme.VistaQuickDonationTheme
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import com.example.vistaquickdonation.ui.screens.CharityProfileDesign
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import com.example.vistaquickdonation.ui.screens.DonationMapScreen
+import com.example.vistaquickdonation.ui.theme.VistaQuickDonationTheme
 
-class CharityProfileActivity : ComponentActivity() {
+class InteractiveMapActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             VistaQuickDonationTheme {
-                CharityProfileDesign()
+                DonationMapScreen()
             }
         }
     }
 }
-

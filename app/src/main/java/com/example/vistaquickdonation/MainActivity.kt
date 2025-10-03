@@ -49,6 +49,9 @@ class MainActivity : ComponentActivity() {
                         },
                         onHomePageClick = {
                             startActivity(Intent(this, HomePageActivity::class.java))
+                        },
+                        onDonationMapClick = {
+                            startActivity(Intent(this, InteractiveMapActivity::class.java))
                         }
                     )
                 }
@@ -65,7 +68,8 @@ fun MainScreen(
     onRegisterClick: () -> Unit,
     onCharityProfileClick: () -> Unit,
     onPickUpAtHomeClick: () -> Unit,
-    onHomePageClick: () -> Unit
+    onHomePageClick: () -> Unit,
+    onDonationMapClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -112,6 +116,7 @@ fun MainScreen(
                 DividerSpacer()
 
                 HomeButton(text = "Go to Charity Profile", onClick = onCharityProfileClick)
+                HomeButton(text = "Go to Donation Map", onClick = onDonationMapClick)
                 HomeButton(text = "Go to PickUp At Home", onClick = onPickUpAtHomeClick)
                 HomeButton(text = "Go to Home Page", onClick = onHomePageClick)
             }
