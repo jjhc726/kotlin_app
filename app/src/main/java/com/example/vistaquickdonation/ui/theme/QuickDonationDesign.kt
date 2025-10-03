@@ -1,4 +1,4 @@
-package com.example.vistaquickdonation.ui
+package com.example.vistaquickdonation.ui.theme
 
 import android.graphics.Bitmap
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,12 +19,20 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.vistaquickdonation.model.DonationItem
+import com.example.vistaquickdonation.viewmodel.DonationViewModel
 
 @Composable
-fun QuickDonationDesign() {
+fun QuickDonationDesign(viewModel: DonationViewModel) {
+
     var capturedImage by remember { mutableStateOf<Bitmap?>(null) }
 
-    // Launcher para abrir la cámara
+    // Campos de texto
+    var description by remember { mutableStateOf("") }
+    var clothingType by remember { mutableStateOf("") }
+    var size by remember { mutableStateOf("") }
+    var brand by remember { mutableStateOf("") }
+
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicturePreview()
     ) { bitmap ->
@@ -44,18 +54,9 @@ fun QuickDonationDesign() {
             color = Color(0xFF3E6F75)
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text(
-            text = "Let’s find the perfect new home for your pre-loved items.",
-            fontSize = 14.sp,
-            color = Color(0xFF6F9AA0),
-            modifier = Modifier.padding(bottom = 24.dp)
-        )
-
         Spacer(modifier = Modifier.height(20.dp))
 
-        // 📸 Caja para mostrar la imagen capturada
+        // Caja de la imagen
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -82,23 +83,53 @@ fun QuickDonationDesign() {
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.Center
-        ) {
-            InputBox("Description (Required)")
-            Spacer(modifier = Modifier.height(12.dp))
-            InputBox("Clothing Type (Required)")
-            Spacer(modifier = Modifier.height(12.dp))
-            InputBox("Size (Required)")
-            Spacer(modifier = Modifier.height(12.dp))
-            InputBox("Brand (Required)")
-        }
+        // Campos de texto
+        OutlinedTextField(
+            value = description,
+            onValueChange = { description = it },
+            label = { Text("Description (Required)") },
+            colors = OutlinedTextFieldDefaults.colors()
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+
+        OutlinedTextField(
+            value = clothingType,
+            onValueChange = { clothingType = it },
+            label = { Text("Clothing Type (Required)") }
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+
+        OutlinedTextField(
+            value = size,
+            onValueChange = { size = it },
+            label = { Text("Size (Required)") }
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+
+        OutlinedTextField(
+            value = brand,
+            onValueChange = { brand = it },
+            label = { Text("Brand (Required)") }
+        )
 
         Spacer(modifier = Modifier.height(40.dp))
 
         Button(
-            onClick = { /* TODO: Enviar datos */ },
+            onClick = {
+                val donation = DonationItem(
+                    description = description,
+                    clothingType = clothingType,
+                    size = size,
+                    brand = brand
+                )
+                viewModel.uploadDonation(donation) { success ->
+                    if (success) {
+                        println("✅ Donación guardada en Firestore")
+                    } else {
+                        println("❌ Error al guardar donación")
+                    }
+                }
+            },
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color(0xFF003137),
                 contentColor = Color.White
@@ -110,20 +141,5 @@ fun QuickDonationDesign() {
         ) {
             Text("Submit Donation")
         }
-    }
-}
-
-// 🔹 Reutilizo la caja blanca para los campos
-@Composable
-fun InputBox(placeholder: String) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(50.dp)
-            .background(Color.White, shape = RoundedCornerShape(4.dp))
-            .padding(start = 8.dp),
-        contentAlignment = Alignment.CenterStart
-    ) {
-        Text(placeholder, color = Color(0xFF6F9AA0), fontSize = 14.sp)
     }
 }
