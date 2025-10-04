@@ -28,7 +28,6 @@ class LoginActivity : AppCompatActivity() {
             VistaQuickDonationTheme {
                 LoginScreen(
                     onLogin = { email, password ->
-                        // Firestore sign-in
                         lifecycleScope.launch {
                             val ok = repo.signIn(email, password)
                             if (ok) {
@@ -36,7 +35,7 @@ class LoginActivity : AppCompatActivity() {
                             } else {
                                 Toast.makeText(
                                     this@LoginActivity,
-                                    "Invalid email or password",
+                                    "Correo o contraseña inválidos ❌",
                                     Toast.LENGTH_SHORT
                                 ).show()
                             }

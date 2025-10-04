@@ -1,23 +1,14 @@
 package com.example.vistaquickdonation.data
 
-import android.os.Build
-import androidx.annotation.RequiresApi
-import com.example.vistaquickdonation.model.UserCredentials
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.ktx.toObject
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.tasks.await
 
 class UserRepository(
-    private val db: FirebaseFirestore = FirebaseFirestore.getInstance()
+    private val auth: FirebaseAuth = FirebaseAuth.getInstance()
 ) {
-    private val users = db.collection("users")
-
-
-    suspend fun signUp(user: UserCredentials): Boolean {
+    suspend fun signUp(email: String, password: String): Boolean {
         return try {
-            val docId = user.email.trim().lowercase()
-            users.document(docId)
-                .set(user.copy(email = docId))
+            auth.createUserWithEmailAndPassword(email.trim(), password)
                 .await()
             true
         } catch (e: Exception) {
@@ -26,41 +17,18 @@ class UserRepository(
         }
     }
 
-
     suspend fun signIn(email: String, password: String): Boolean {
         return try {
-            val key = email.trim().lowercase()
-
-
-            val doc = users.document(key).get().await()
-            if (doc.exists()) {
-                val stored: UserCredentials? = doc.toObject<UserCredentials>()
-                return stored?.password == password
-            }
-
-
-            val snap = users
-                .whereEqualTo("email", key)
-                .whereEqualTo("password", password)
-                .limit(1)
-                .get()
+            auth.signInWithEmailAndPassword(email.trim(), password)
                 .await()
-
-            !snap.isEmpty
+            true
         } catch (e: Exception) {
             e.printStackTrace()
             false
         }
     }
 
+    fun getCurrentUser() = auth.currentUser
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    suspend fun userExists(email: String): Boolean {
-        return try {
-            users.document(email.trim().lowercase()).get().await().exists()
-        } catch (e: Exception) {
-            e.printStackTrace()
-            false
-        }
-    }
+    fun signOut() = auth.signOut()
 }

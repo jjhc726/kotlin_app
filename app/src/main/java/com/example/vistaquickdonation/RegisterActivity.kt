@@ -8,7 +8,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.lifecycle.lifecycleScope
 import com.example.vistaquickdonation.data.UserRepository
-import com.example.vistaquickdonation.model.UserCredentials
 import com.example.vistaquickdonation.ui.screens.RegisterScreen
 import com.example.vistaquickdonation.ui.theme.VistaQuickDonationTheme
 import kotlinx.coroutines.launch
@@ -25,7 +24,7 @@ class RegisterActivity : ComponentActivity() {
                 RegisterScreen(
                     onRegister = { email, password ->
                         lifecycleScope.launch {
-                            val ok = repo.signUp(UserCredentials(email, password))
+                            val ok = repo.signUp(email, password)
                             if (ok) {
                                 Toast.makeText(
                                     this@RegisterActivity,
