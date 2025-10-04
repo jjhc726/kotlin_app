@@ -27,8 +27,4 @@ class UserRepository(
             false
         }
     }
-
-    fun getCurrentUser() = auth.currentUser
-
-    fun signOut() = auth.signOut()
 }
