@@ -1,10 +1,11 @@
 package com.example.vistaquickdonation.data
 
 import com.example.vistaquickdonation.model.DonationItem
-import com.google.firebase.firestore.FieldValue
+import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.tasks.await
+import java.util.Calendar
 
 class DonationRepository {
 
@@ -20,29 +21,24 @@ class DonationRepository {
             false
         }
     }
+    suspend fun getThisMonthDonations() =
+        try {
+            val calendar = Calendar.getInstance()
+            calendar.set(Calendar.DAY_OF_MONTH, 1)
+            calendar.set(Calendar.HOUR_OF_DAY, 0)
+            calendar.set(Calendar.MINUTE, 0)
+            calendar.set(Calendar.SECOND, 0)
+            calendar.set(Calendar.MILLISECOND, 0)
 
-    suspend fun uploadDonationWithTimestamp(item: DonationItem): Boolean {
-        return try {
-            val data = hashMapOf(
-                "description"   to item.description,
-                "clothingType"  to item.clothingType,
-                "size"          to item.size,
-                "brand"         to item.brand,
-                "createdAt"     to FieldValue.serverTimestamp()
-            )
-            donations.add(data).await()
-            true
+            val startOfMonth = Timestamp(calendar.time)
+
+            donations
+                .whereGreaterThanOrEqualTo("createdAt", startOfMonth)
+                .orderBy("createdAt", Query.Direction.DESCENDING)
+                .get()
+                .await()
         } catch (e: Exception) {
             e.printStackTrace()
-            false
+            null
         }
-    }
-
-
-    suspend fun getLatestDonations(limit: Long = 20) =
-        donations
-            .orderBy("createdAt", Query.Direction.DESCENDING)
-            .limit(limit)
-            .get()
-            .await()
 }

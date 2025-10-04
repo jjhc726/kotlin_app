@@ -10,6 +10,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalContext
 import com.example.vistaquickdonation.ui.theme.VistaQuickDonationTheme
+import com.example.vistaquickdonation.viewmodel.DonationViewModel
 import kotlinx.coroutines.launch
 
 // Palette
@@ -51,6 +55,15 @@ fun HomePageScreen() {
     val context = LocalContext.current
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+
+    // ViewModel
+    val donationViewModel = androidx.lifecycle.viewmodel.compose.viewModel<DonationViewModel>()
+    val monthlyDonations by donationViewModel.monthlyDonations.collectAsState()
+
+    // cargar donaciones del mes al abrir pantalla
+    LaunchedEffect(Unit) {
+        donationViewModel.loadThisMonthDonations()
+    }
 
     fun go(clz: Class<*>) {
         context.startActivity(Intent(context, clz))
@@ -180,6 +193,27 @@ fun HomePageScreen() {
                     buttonColor = DeepBlue,
                     onClick = { go(ScheduleDonationActivity::class.java) }
                 )
+
+                Spacer(Modifier.weight(1f))
+
+                /** 🔹 Lista de donaciones del mes */
+                Text(
+                    text = "This Month's Donations",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = DeepBlue,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+                if (monthlyDonations.isEmpty()) {
+                    Text("No donations yet this month", color = Secondary)
+                } else {
+                    monthlyDonations.forEach { donation ->
+                        Text(
+                            "- ${donation.description} (${donation.clothingType})",
+                            color = DeepBlue,
+                            fontSize = 14.sp
+                        )
+                    }
+                }
 
                 Spacer(Modifier.weight(1f))
 
