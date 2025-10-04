@@ -28,6 +28,9 @@ import com.example.vistaquickdonation.viewmodel.NotificationsViewModel
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.material.icons.rounded.Checkroom
+
+
 
 class HomePageActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -181,16 +184,25 @@ fun HomePageScreen() {
                         .fillMaxWidth()
                         .height(160.dp),
                     shape = RoundedCornerShape(18.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+                    colors = CardDefaults.cardColors(containerColor = AquaLight),
                     elevation = CardDefaults.cardElevation(0.dp)
                 ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                        contentDescription = "Home banner",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Checkroom,
+                            contentDescription = "Clothes banner",
+                            tint = TealDark,
+                            modifier = Modifier.fillMaxSize(0.5f)
+                        )
+
+                    }
                 }
+
 
                 Spacer(Modifier.height(16.dp))
 

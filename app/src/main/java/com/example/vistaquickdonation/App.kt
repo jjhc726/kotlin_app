@@ -12,7 +12,6 @@ class App : Application() {
     override fun onCreate() {
         super.onCreate()
         createNotificationChannelIfNeeded()
-        // Suscripción de prueba a un tópico general (puedes quitarlo si no lo usarás)
         FirebaseMessaging.getInstance().subscribeToTopic("global")
     }
 
