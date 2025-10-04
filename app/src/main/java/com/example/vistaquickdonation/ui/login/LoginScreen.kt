@@ -13,14 +13,18 @@ import androidx.compose.ui.unit.sp
 import com.example.vistaquickdonation.ui.theme.*
 
 @Composable
-fun LoginScreen(onLogin: (String, String) -> Unit) {
+fun LoginScreen(
+    onLogin: (String, String) -> Unit,
+    supportsBiometric: Boolean,
+    onBiometricClick: () -> Unit
+) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(DeepBlue), // Fondo oscuro elegante
+            .background(DeepBlue),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -34,38 +38,58 @@ fun LoginScreen(onLogin: (String, String) -> Unit) {
                 .padding(24.dp)
         ) {
             Text(
-                text = "Bienvenido",
+                text = "Welcome",
                 style = MaterialTheme.typography.headlineMedium,
                 color = DeepBlue
             )
-            Spacer(modifier = Modifier.height(16.dp))
+
+            Spacer(Modifier.height(16.dp))
 
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
-                label = { Text("Correo electrónico") },
+                label = { Text("Email") },
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MediumBlue,
-                    focusedLabelColor = MediumBlue
+                    focusedBorderColor = DeepBlue,
+                    focusedLabelColor = DeepBlue
                 )
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(Modifier.height(12.dp))
 
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text("Contraseña") },
+                label = { Text("Password") },
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MediumBlue,
-                    focusedLabelColor = MediumBlue
+                    focusedBorderColor = DeepBlue,
+                    focusedLabelColor = DeepBlue
                 )
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(Modifier.height(16.dp))
+
+            if (supportsBiometric) {
+                OutlinedButton(
+                    onClick = onBiometricClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = DeepBlue
+                    )
+                ) {
+                    Text("Sign in with fingerprint")
+                }
+
+                Spacer(Modifier.height(8.dp))
+                Text("or", color = DeepBlue, fontSize = 12.sp)
+                Spacer(Modifier.height(8.dp))
+            }
 
             Button(
                 onClick = { onLogin(email, password) },
@@ -75,7 +99,7 @@ fun LoginScreen(onLogin: (String, String) -> Unit) {
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = TealMedium)
             ) {
-                Text("Iniciar Sesión", fontSize = 18.sp)
+                Text("Sign In", fontSize = 18.sp)
             }
         }
     }
