@@ -23,15 +23,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalContext
 import com.example.vistaquickdonation.ui.theme.VistaQuickDonationTheme
 import kotlinx.coroutines.launch
+import com.example.vistaquickdonation.ui.theme.*
+import com.google.firebase.firestore.FirebaseFirestore
 
-// Palette
-private val SoftBlue   = Color(0xFFAFC7CA) // background
-private val DeepBlue   = Color(0xFF003137) // primary
-private val Secondary  = Color(0xFF6F9AA0) // secondary
-private val AquaLight  = Color(0xFFBCEEF5)
-private val TealMedium = Color(0xFF3E6F75)
-private val TealDark   = Color(0xFF1B454B)
-private val White      = Color(0xFFFFFFFF)
 
 class HomePageActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -76,6 +70,7 @@ fun HomePageScreen() {
                     label = { Text("Open Interactive Map") },
                     selected = false,
                     onClick = {
+                        logDonationPreference("interactiveMap")
                         scope.launch { drawerState.close() }
                         go(InteractiveMapActivity::class.java)
                     }
@@ -94,6 +89,7 @@ fun HomePageScreen() {
                     label = { Text("Go to Pick Up At Home") },
                     selected = false,
                     onClick = {
+                        logDonationPreference("pickupAtHome")
                         scope.launch { drawerState.close() }
                         go(PickUpAtHomeActivity::class.java)
                     }
@@ -134,7 +130,7 @@ fun HomePageScreen() {
                 Text(
                     text = "Donate easily, make a real impact.",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Secondary,
+                    color = MediumBlue,
                     textAlign = TextAlign.Center
                 )
 
@@ -146,7 +142,7 @@ fun HomePageScreen() {
                     titleColor = TealDark,
                     title = "Make quick and simple donations",
                     buttonText = "Donate Now",
-                    buttonColor = Secondary,
+                    buttonColor = MediumBlue,
                     onClick = { go(QuickDonationActivity::class.java) }
                 )
 
@@ -186,7 +182,7 @@ fun HomePageScreen() {
                 Text(
                     text = "Made to reduce textile waste",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Secondary,
+                    color = MediumBlue,
                     modifier = Modifier.padding(bottom = 12.dp),
                     textAlign = TextAlign.Center
                 )
@@ -235,5 +231,22 @@ private fun FeatureCard(
                 Text(buttonText, style = MaterialTheme.typography.labelLarge)
             }
         }
+    }
+}
+
+fun logDonationPreference(type: String) {
+    val db = FirebaseFirestore.getInstance()
+    val docRef = db.collection("Engagement").document("donationPreferences")
+
+    db.runTransaction { transaction ->
+        val snapshot = transaction.get(docRef)
+        val current = snapshot.getLong(type) ?: 0
+        transaction.update(docRef, type, current + 1)
+    }.addOnFailureListener {
+        val initialData = hashMapOf(
+            "pickupAtHome" to 0,
+            "interactiveMap" to 0
+        )
+        docRef.set(initialData)
     }
 }
