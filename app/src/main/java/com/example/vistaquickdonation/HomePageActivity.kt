@@ -192,7 +192,6 @@ fun HomePageScreen() {
 
                 Spacer(Modifier.weight(1f))
 
-                /** 🔹 Lista de donaciones del mes */
                 Text(
                     text = "This Month's Donations",
                     style = MaterialTheme.typography.titleMedium,

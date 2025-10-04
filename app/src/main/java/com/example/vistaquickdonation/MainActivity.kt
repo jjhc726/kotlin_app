@@ -19,7 +19,7 @@ import com.example.vistaquickdonation.ui.theme.VistaQuickDonationTheme
 
 private val Bg = Color(0xFFAFC7CA)      // fondo
 private val Primary = Color(0xFF003137) // primario (botones / títulos)
-private val Secondary = Color(0xFF6F9AA0) // secundario (subtítulos)
+val Secondary = Color(0xFF6F9AA0) // secundario (subtítulos)
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
