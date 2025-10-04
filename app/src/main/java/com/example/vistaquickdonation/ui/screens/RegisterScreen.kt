@@ -20,14 +20,16 @@ import com.example.vistaquickdonation.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RegisterScreen() {
+fun RegisterScreen(
+    onRegister: (String, String) -> Unit,   // ✅ nuevo
+    onGoToLogin: () -> Unit                 // ✅ para navegar a login
+) {
     var fullName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var city by remember { mutableStateOf("") }
     var interest by remember { mutableStateOf("") }
 
-    // Fondo con suave contraste para destacar el formulario
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -43,7 +45,7 @@ fun RegisterScreen() {
                             fontSize = 22.sp
                         )
                     },
-                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = TealDark,
                         titleContentColor = AquaLight
                     )
@@ -60,8 +62,6 @@ fun RegisterScreen() {
                     .padding(horizontal = 24.dp, vertical = 20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-
-                // Subtítulo
                 Text(
                     text = "Únete a la red de donadores y voluntarios",
                     color = DeepBlue,
@@ -69,7 +69,6 @@ fun RegisterScreen() {
                     modifier = Modifier.padding(bottom = 28.dp)
                 )
 
-                // Card moderna para agrupar campos
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(20.dp),
@@ -87,30 +86,20 @@ fun RegisterScreen() {
                         RegisterTextField(email, { email = it }, "Correo electrónico")
                         Spacer(Modifier.height(16.dp))
 
-                        RegisterTextField(
-                            password,
-                            { password = it },
-                            "Contraseña",
-                            password = true
-                        )
+                        RegisterTextField(password, { password = it }, "Contraseña", password = true)
                         Spacer(Modifier.height(16.dp))
 
                         RegisterTextField(city, { city = it }, "Ciudad")
                         Spacer(Modifier.height(16.dp))
 
-                        RegisterTextField(
-                            interest,
-                            { interest = it },
-                            "Intereses (Donar, Voluntariado...)"
-                        )
+                        RegisterTextField(interest, { interest = it }, "Intereses (Donar, Voluntariado...)")
                     }
                 }
 
                 Spacer(Modifier.height(32.dp))
 
-                // Botón principal con color llamativo
                 Button(
-                    onClick = { /* TODO: Acción futura */ },
+                    onClick = { onRegister(email, password) },   // ✅ conecta con la lógica de repo
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp)
@@ -128,8 +117,7 @@ fun RegisterScreen() {
 
                 Spacer(Modifier.height(20.dp))
 
-                // Enlace para iniciar sesión
-                TextButton(onClick = { /* TODO: Navegar a Login */ }) {
+                TextButton(onClick = { onGoToLogin() }) {   // ✅ vuelve al login
                     Text(
                         "¿Ya tienes cuenta? Inicia sesión",
                         color = TealDark,
