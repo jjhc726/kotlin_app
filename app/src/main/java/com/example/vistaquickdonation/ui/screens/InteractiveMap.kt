@@ -45,10 +45,10 @@ fun DonationMapScreen() {
     var schedule by remember { mutableStateOf("All") }
 
     val points = listOf(
-        DonationPoint("p1","Fundación Niñez Feliz",LatLng(4.651, -74.060),"Children",true,"Morning"),
-        DonationPoint("p2","Abrigo para Todos",LatLng(4.730, -74.082),"Adults",false,"Afternoon"),
-        DonationPoint("p3","Refugio Esperanza",LatLng(4.705, -74.100),"Emergency",true,"Night"),
-        DonationPoint("p4","Ropero Comunitario",LatLng(4.745, -74.050),"Children",false,"Morning"),
+        DonationPoint("p1", "Fundación Niñez Feliz", LatLng(4.651, -74.060), "Children", true, "Morning"),
+        DonationPoint("p2", "Abrigo para Todos", LatLng(4.730, -74.082), "Adults", false, "Afternoon"),
+        DonationPoint("p3", "Refugio Esperanza", LatLng(4.705, -74.100), "Emergency", true, "Night"),
+        DonationPoint("p4", "Ropero Comunitario", LatLng(4.745, -74.050), "Children", false, "Morning"),
     )
 
     val cameraPositionState = rememberCameraPositionState {
@@ -68,10 +68,19 @@ fun DonationMapScreen() {
         )
     }
 
+    var isMapLoaded by remember { mutableStateOf(false) }
+
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { granted ->
         hasLocationPermission = granted
+        if (granted) {
+            fusedLocationClient.lastLocation.addOnSuccessListener { loc ->
+                loc?.let {
+                    userLocation = LatLng(it.latitude, it.longitude)
+                }
+            }
+        }
     }
 
     LaunchedEffect(Unit) {
@@ -85,6 +94,40 @@ fun DonationMapScreen() {
             }
         }
     }
+
+    val visiblePoints = remember(cause, access, schedule, points) {
+        points.filter { p ->
+            (cause == "All" || p.cause == cause) &&
+                    (access == "All" || (access == "Accessible") == p.accessible) &&
+                    (schedule == "All" || p.schedule == schedule)
+        }
+    }
+
+    var selectedPoint by remember { mutableStateOf<DonationPoint?>(null) }
+
+    val markerStates = remember { mutableMapOf<String, MarkerState>() }
+
+
+    LaunchedEffect(userLocation, visiblePoints, isMapLoaded) {
+
+        if (!isMapLoaded) return@LaunchedEffect
+
+        userLocation?.let { userLoc ->
+            val nearestPoint = visiblePoints.minByOrNull { p ->
+                val dx = userLoc.latitude - p.position.latitude
+                val dy = userLoc.longitude - p.position.longitude
+                dx * dx + dy * dy
+            }
+            selectedPoint = nearestPoint
+
+            kotlinx.coroutines.delay(100)
+
+            nearestPoint?.let {
+                markerStates[it.id]?.showInfoWindow()
+            }
+        }
+    }
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -107,18 +150,37 @@ fun DonationMapScreen() {
                     uiSettings = MapUiSettings(
                         zoomControlsEnabled = true,
                         myLocationButtonEnabled = true
-                    )
+                    ),
+                    onMapLoaded = { isMapLoaded = true }
                 ) {
-                    points.filter { p ->
-                        (cause == "All" || p.cause == cause) &&
-                                (access == "All" || (access == "Accessible") == p.accessible) &&
-                                (schedule == "All" || p.schedule == schedule)
-                    }.forEach { p ->
-                        Marker(
-                            state = MarkerState(position = p.position),
+                    visiblePoints.forEach { p ->
+                        val markerState = remember { MarkerState(position = p.position) }
+                        markerStates[p.id] = markerState
+                        val isNearest = p == selectedPoint
+                        MarkerInfoWindow(
+                            state = markerState,
                             title = p.name,
-                            snippet = "${p.cause} • ${p.schedule}${if (p.accessible) " • ♿" else ""}"
-                        )
+                            snippet = "${p.cause} • ${p.schedule}${if (p.accessible) " • Accessible" else ""}",
+                            onClick = {
+                                selectedPoint = p
+                                false // Devuelve false para que el comportamiento por defecto (mostrar info) ocurra
+                            }
+                        ) {
+                            // Contenido personalizado del popup
+                            Card(
+                                modifier = Modifier.padding(4.dp),
+                                colors = CardDefaults.cardColors(containerColor = White)
+                            ) {
+                                Column(Modifier.padding(8.dp)) {
+                                    if (isNearest) {
+                                        Text("⭐ Closest Point")
+                                    }
+                                    Text(p.name)
+                                    Text("${p.cause} • ${p.schedule}")
+                                    if (p.accessible) Text("Accessible")
+                                }
+                            }
+                        }
                     }
                 }
             } else {
@@ -128,6 +190,7 @@ fun DonationMapScreen() {
                 )
             }
 
+            // Filtros
             Card(
                 modifier = Modifier
                     .padding(12.dp)
