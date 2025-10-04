@@ -7,6 +7,7 @@ import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -16,10 +17,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.*
+import com.example.vistaquickdonation.ui.theme.*
 
 // Modelo de punto de donación
 data class DonationPoint(
@@ -37,30 +40,25 @@ data class DonationPoint(
 fun DonationMapScreen() {
     val bogota = LatLng(4.7110, -74.0721)
 
-    // Filtros
-    var cause by remember { mutableStateOf("Todos") }
-    var access by remember { mutableStateOf("Todos") }
-    var schedule by remember { mutableStateOf("Todos") }
+    var cause by remember { mutableStateOf("All") }
+    var access by remember { mutableStateOf("All") }
+    var schedule by remember { mutableStateOf("All") }
 
-    // Lista de puntos
     val points = listOf(
-        DonationPoint("p1","Fundación Niñez Feliz",LatLng(4.651, -74.060),"Niñez",true,"Mañana"),
-        DonationPoint("p2","Abrigo para Todos",LatLng(4.730, -74.082),"Adultos",false,"Tarde"),
-        DonationPoint("p3","Refugio Esperanza",LatLng(4.705, -74.100),"Emergencia",true,"Noche"),
-        DonationPoint("p4","Ropero Comunitario",LatLng(4.745, -74.050),"Niñez",false,"Mañana"),
+        DonationPoint("p1","Fundación Niñez Feliz",LatLng(4.651, -74.060),"Children",true,"Morning"),
+        DonationPoint("p2","Abrigo para Todos",LatLng(4.730, -74.082),"Adults",false,"Afternoon"),
+        DonationPoint("p3","Refugio Esperanza",LatLng(4.705, -74.100),"Emergency",true,"Night"),
+        DonationPoint("p4","Ropero Comunitario",LatLng(4.745, -74.050),"Children",false,"Morning"),
     )
 
-    // Estado del mapa
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(bogota, 12f)
     }
 
-    // Estado de ubicación del usuario
     var userLocation by remember { mutableStateOf<LatLng?>(null) }
     val context = LocalContext.current
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
 
-    // Control de permisos
     var hasLocationPermission by remember {
         mutableStateOf(
             ActivityCompat.checkSelfPermission(
@@ -76,7 +74,6 @@ fun DonationMapScreen() {
         hasLocationPermission = granted
     }
 
-    // Pedir permiso si no lo tenemos
     LaunchedEffect(Unit) {
         if (!hasLocationPermission) {
             permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
@@ -88,76 +85,89 @@ fun DonationMapScreen() {
             }
         }
     }
-
-    Box(Modifier.fillMaxSize()) {
-        if (hasLocationPermission) {
-            // Mapa
-            GoogleMap(
-                modifier = Modifier.fillMaxSize(),
-                cameraPositionState = cameraPositionState,
-                properties = MapProperties(isMyLocationEnabled = true),
-                uiSettings = MapUiSettings(zoomControlsEnabled = true, myLocationButtonEnabled = true)
-            ) {
-                // Marcadores filtrados
-                points.filter { p ->
-                    (cause == "Todos" || p.cause == cause) &&
-                            (access == "Todos" || (access == "Accesible") == p.accessible) &&
-                            (schedule == "Todos" || p.schedule == schedule)
-                }.forEach { p ->
-                    Marker(
-                        state = MarkerState(position = p.position),
-                        title = p.name,
-                        snippet = "${p.cause} • ${p.schedule}${if (p.accessible) " • ♿" else ""}"
-                    )
-                }
-            }
-        } else {
-            Text(
-                "Se necesita permiso de ubicación para mostrar el mapa",
-                modifier = Modifier.padding(16.dp)
+    Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = { Text("Donation Map") },
+                modifier = Modifier.height(100.dp),
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = TealDark,
+                    titleContentColor = White,
+                )
             )
         }
+    ) { innerPadding ->
 
-        // Filtros arriba
-        Card(
-            modifier = Modifier
-                .padding(12.dp)
-                .fillMaxWidth()
-                .align(androidx.compose.ui.Alignment.TopCenter),
-            elevation = CardDefaults.cardElevation(6.dp)
-        ) {
-            Row(
+        Box(Modifier.fillMaxSize().padding(innerPadding)) {
+            if (hasLocationPermission) {
+                GoogleMap(
+                    modifier = Modifier.fillMaxSize(),
+                    cameraPositionState = cameraPositionState,
+                    properties = MapProperties(isMyLocationEnabled = true),
+                    uiSettings = MapUiSettings(
+                        zoomControlsEnabled = true,
+                        myLocationButtonEnabled = true
+                    )
+                ) {
+                    points.filter { p ->
+                        (cause == "All" || p.cause == cause) &&
+                                (access == "All" || (access == "Accessible") == p.accessible) &&
+                                (schedule == "All" || p.schedule == schedule)
+                    }.forEach { p ->
+                        Marker(
+                            state = MarkerState(position = p.position),
+                            title = p.name,
+                            snippet = "${p.cause} • ${p.schedule}${if (p.accessible) " • ♿" else ""}"
+                        )
+                    }
+                }
+            } else {
+                Text(
+                    "Se necesita permiso de ubicación para mostrar el mapa",
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
+
+            Card(
                 modifier = Modifier
-                    .padding(8.dp)
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    .padding(12.dp)
+                    .background(White)
+                    .fillMaxWidth()
+                    .align(androidx.compose.ui.Alignment.TopCenter),
+                elevation = CardDefaults.cardElevation(6.dp)
             ) {
+                Row(
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .background(White)
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    FilterDropdown(
+                        label = "Cause",
+                        value = cause,
+                        items = listOf("All", "Children", "Adults", "Emergency"),
+                        modifier = Modifier.weight(1f).background(White)
+                    ) { cause = it }
 
-                FilterDropdown(
-                    label = "Causa",
-                    value = cause,
-                    items = listOf("Todos", "Niñez", "Adultos", "Emergencia"),
-                    modifier = Modifier.weight(1f)
-                ) { cause = it }
+                    FilterDropdown(
+                        label = "Access",
+                        value = access,
+                        items = listOf("All", "Accessible", "Not accessible"),
+                        modifier = Modifier.weight(1f).background(White)
+                    ) { access = it }
 
-                FilterDropdown(
-                    label = "Acceso",
-                    value = access,
-                    items = listOf("Todos", "Accesible", "No accesible"),
-                    modifier = Modifier.weight(1f)
-                ) { access = it }
-
-                FilterDropdown(
-                    label = "Horario",
-                    value = schedule,
-                    items = listOf("Todos", "Mañana", "Tarde", "Noche"),
-                    modifier = Modifier.weight(1f)
-                ) { schedule = it }
+                    FilterDropdown(
+                        label = "Schedule",
+                        value = schedule,
+                        items = listOf("All", "Morning", "Afternoon", "Night"),
+                        modifier = Modifier.weight(1f).background(White)
+                    ) { schedule = it }
+                }
             }
         }
     }
 }
-
 @Composable
 fun FilterDropdown(
     label: String,
@@ -171,21 +181,36 @@ fun FilterDropdown(
     ExposedDropdownMenuBox(
         expanded = expanded,
         onExpandedChange = { expanded = !expanded },
-        modifier = modifier
+        modifier = modifier.background(White)
     ) {
         OutlinedTextField(
             value = value,
             onValueChange = {},
             readOnly = true,
-            label = { Text(label) },
-            modifier = Modifier.menuAnchor(),
+            label = {
+                Text(
+                    label,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            },
+            modifier = Modifier
+                .background(White)
+                .menuAnchor(),
+            maxLines = 1,
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) }
         )
         ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             items.forEach {
                 DropdownMenuItem(
-                    text = { Text(it) },
-                    onClick = {
+                    text = {
+                        Text(
+                            it,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    },
+                     onClick = {
                         onChanged(it)
                         expanded = false
                     }
