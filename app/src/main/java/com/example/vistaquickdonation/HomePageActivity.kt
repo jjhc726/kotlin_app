@@ -233,6 +233,21 @@ fun HomePageScreen() {
 
                 Spacer(Modifier.weight(1f))
 
+                Button(
+                    onClick = { context.startActivity(Intent(context, RegisterActivity::class.java)) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = TealMedium)
+                ) {
+                    Text("Create an account", fontSize = 16.sp, color = White)
+                }
+
+                Spacer(Modifier.height(12.dp))
+
+
+
                 Text(
                     text = "Made to reduce textile waste",
                     style = MaterialTheme.typography.bodyMedium,

@@ -31,9 +31,11 @@ class LoginActivity : AppCompatActivity() {
                         lifecycleScope.launch {
                             val ok = repo.signIn(email, password)
                             if (ok) {
+                                // Guarda el email de FirebaseAuth (fallback al escrito)
+                                val authedEmail = repo.currentEmail() ?: email.trim().lowercase()
                                 getSharedPreferences("session", MODE_PRIVATE)
                                     .edit()
-                                    .putString("email", email.trim().lowercase())
+                                    .putString("email", authedEmail)
                                     .apply()
 
                                 goToHome()
@@ -77,6 +79,8 @@ class LoginActivity : AppCompatActivity() {
         val callback = object : BiometricPrompt.AuthenticationCallback() {
             override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
                 super.onAuthenticationSucceeded(result)
+                // Si quieres validar que exista sesión de FirebaseAuth antes de pasar:
+                // if (repo.currentEmail() != null) goToHome() else Toast.makeText(...).show()
                 goToHome()
             }
 

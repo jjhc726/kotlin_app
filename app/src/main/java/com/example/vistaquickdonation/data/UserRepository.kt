@@ -1,48 +1,37 @@
 package com.example.vistaquickdonation.data
 
 import android.util.Log
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 
 class UserRepository(
-    private val db: FirebaseFirestore = FirebaseFirestore.getInstance()
+    private val db: FirebaseFirestore = FirebaseFirestore.getInstance(),
+    private val auth: FirebaseAuth = FirebaseAuth.getInstance()
 ) {
     private val users = db.collection("users")
 
+
     suspend fun signIn(email: String, password: String): Boolean {
-        val key = email.trim().lowercase()
         return try {
-            // 1) Intento por ID = email
-            val docSnap = users.document(key).get().await()
-            if (docSnap.exists()) {
-                val storedPass = docSnap.getString("password")
-                return storedPass == password
-            }
-
-            // 2) Fallback: solo por email (sin índice compuesto)
-            val snap = users.whereEqualTo("email", key).limit(1).get().await()
-            if (!snap.isEmpty) {
-                val first = snap.documents.first()
-                val storedPass = first.getString("password")
-                return storedPass == password
-            }
-
-            false
+            auth.signInWithEmailAndPassword(email.trim(), password).await()
+            true
         } catch (e: Exception) {
             Log.e("UserRepository", "signIn() failed", e)
             false
         }
     }
 
+
     suspend fun signUp(email: String, password: String): Boolean {
         val key = email.trim().lowercase()
         return try {
-            users.document(key).set(
-                mapOf(
-                    "email" to key,
-                    "password" to password
-                )
-            ).await()
+            auth.createUserWithEmailAndPassword(key, password).await()
+
+            // Mantén tu colección 'users' como perfil (no guardes la contraseña)
+            val profile = mapOf("email" to key)
+            users.document(key).set(profile).await()
+
             true
         } catch (e: Exception) {
             Log.e("UserRepository", "signUp() failed", e)
@@ -50,13 +39,21 @@ class UserRepository(
         }
     }
 
+
+
     suspend fun userExists(email: String): Boolean {
-        val key = email.trim().lowercase()
         return try {
-            users.document(key).get().await().exists()
+            val methods = auth.fetchSignInMethodsForEmail(email.trim()).await()
+            !methods.signInMethods.isNullOrEmpty()
         } catch (e: Exception) {
             Log.e("UserRepository", "userExists() failed", e)
             false
         }
     }
+
+
+    fun currentEmail(): String? = auth.currentUser?.email?.trim()?.lowercase()
+
+
+    fun signOut() = auth.signOut()
 }
