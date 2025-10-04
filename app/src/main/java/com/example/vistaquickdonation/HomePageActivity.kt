@@ -8,28 +8,26 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.platform.LocalContext
-import com.example.vistaquickdonation.ui.theme.VistaQuickDonationTheme
-import com.example.vistaquickdonation.viewmodel.DonationViewModel
-import kotlinx.coroutines.launch
 import com.example.vistaquickdonation.ui.theme.*
+import com.example.vistaquickdonation.viewmodel.DonationViewModel
+import com.example.vistaquickdonation.viewmodel.NotificationsViewModel
 import com.google.firebase.firestore.FirebaseFirestore
-
+import kotlinx.coroutines.launch
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 class HomePageActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,24 +42,39 @@ class HomePageActivity : ComponentActivity() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomePageScreen() {
     val context = LocalContext.current
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
-    // ViewModel
-    val donationViewModel = androidx.lifecycle.viewmodel.compose.viewModel<DonationViewModel>()
+
+    val sessionEmail = remember {
+        context.getSharedPreferences("session", android.content.Context.MODE_PRIVATE)
+            .getString("email", null)
+    }
+
+
+    val donationViewModel = viewModel<DonationViewModel>()
     val monthlyDonations by donationViewModel.monthlyDonations.collectAsState()
 
-    // cargar donaciones del mes al abrir pantalla
+
+    val notificationsVM = viewModel<NotificationsViewModel>()
+    val notifications by notificationsVM.notifications.collectAsState()
+    val lastDonationText by notificationsVM.lastDonationText.collectAsState()
+
+
     LaunchedEffect(Unit) {
         donationViewModel.loadThisMonthDonations()
+        sessionEmail?.let { notificationsVM.start(it) }
     }
 
-    fun go(clz: Class<*>) {
-        context.startActivity(Intent(context, clz))
-    }
+    fun go(clz: Class<*>) = context.startActivity(Intent(context, clz))
+
+
+    var showNotifications by remember { mutableStateOf(false) }
+    val notifSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -77,8 +90,6 @@ fun HomePageScreen() {
                     style = MaterialTheme.typography.labelLarge,
                     color = DeepBlue
                 )
-
-
                 NavigationDrawerItem(
                     label = { Text("Open Interactive Map") },
                     selected = false,
@@ -88,8 +99,6 @@ fun HomePageScreen() {
                         go(InteractiveMapActivity::class.java)
                     }
                 )
-
-
                 NavigationDrawerItem(
                     label = { Text("Go to Charity Profile") },
                     selected = false,
@@ -107,7 +116,6 @@ fun HomePageScreen() {
                         go(PickUpAtHomeActivity::class.java)
                     }
                 )
-
                 Spacer(Modifier.height(12.dp))
             }
         }
@@ -122,7 +130,7 @@ fun HomePageScreen() {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
-                // Top bar with menu button
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -136,8 +144,16 @@ fun HomePageScreen() {
                     Text(
                         text = "Recyclothes",
                         color = DeepBlue,
-                        style = MaterialTheme.typography.headlineMedium
+                        style = MaterialTheme.typography.headlineMedium,
+                        modifier = Modifier.weight(1f)
                     )
+                    IconButton(onClick = { showNotifications = true }) {
+                        Icon(
+                            imageVector = Icons.Filled.Notifications,
+                            contentDescription = "Notifications",
+                            tint = DeepBlue
+                        )
+                    }
                 }
 
                 Text(
@@ -148,7 +164,6 @@ fun HomePageScreen() {
                 )
 
                 Spacer(Modifier.height(16.dp))
-
 
                 FeatureCard(
                     container = AquaLight,
@@ -169,7 +184,6 @@ fun HomePageScreen() {
                     colors = CardDefaults.cardColors(containerColor = Color.Transparent),
                     elevation = CardDefaults.cardElevation(0.dp)
                 ) {
-                    // Replace R.drawable.home_banner with your actual asset name
                     Image(
                         painter = painterResource(id = R.drawable.ic_launcher_foreground),
                         contentDescription = "Home banner",
@@ -180,7 +194,6 @@ fun HomePageScreen() {
 
                 Spacer(Modifier.height(16.dp))
 
-
                 FeatureCard(
                     container = TealMedium,
                     titleColor = White,
@@ -190,7 +203,7 @@ fun HomePageScreen() {
                     onClick = { go(ScheduleDonationActivity::class.java) }
                 )
 
-                Spacer(Modifier.weight(1f))
+                Spacer(Modifier.height(16.dp))
 
                 Text(
                     text = "This Month's Donations",
@@ -210,6 +223,14 @@ fun HomePageScreen() {
                     }
                 }
 
+
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = "Last donation: ${lastDonationText ?: "—"}",
+                    color = DeepBlue,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+
                 Spacer(Modifier.weight(1f))
 
                 Text(
@@ -219,6 +240,39 @@ fun HomePageScreen() {
                     modifier = Modifier.padding(bottom = 12.dp),
                     textAlign = TextAlign.Center
                 )
+            }
+
+
+            if (showNotifications) {
+                ModalBottomSheet(
+                    onDismissRequest = { showNotifications = false },
+                    sheetState = notifSheetState
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.Start
+                    ) {
+                        Text(
+                            "Notifications",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = DeepBlue
+                        )
+                        Spacer(Modifier.height(8.dp))
+
+                        if (notifications.isEmpty()) {
+                            Text("You'll see your latest alerts here.", color = Secondary)
+                        } else {
+                            notifications.forEach { n ->
+                                Text("• ${n.title} — ${n.body}", color = DeepBlue)
+                                Spacer(Modifier.height(6.dp))
+                            }
+                        }
+
+                        Spacer(Modifier.height(24.dp))
+                    }
+                }
             }
         }
     }

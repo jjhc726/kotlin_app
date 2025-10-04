@@ -31,11 +31,16 @@ class LoginActivity : AppCompatActivity() {
                         lifecycleScope.launch {
                             val ok = repo.signIn(email, password)
                             if (ok) {
+                                getSharedPreferences("session", MODE_PRIVATE)
+                                    .edit()
+                                    .putString("email", email.trim().lowercase())
+                                    .apply()
+
                                 goToHome()
                             } else {
                                 Toast.makeText(
                                     this@LoginActivity,
-                                    "Correo o contraseña inválidos ❌",
+                                    "Invalid email or password",
                                     Toast.LENGTH_SHORT
                                 ).show()
                             }
@@ -53,7 +58,6 @@ class LoginActivity : AppCompatActivity() {
         finish()
     }
 
-    /** True if device can authenticate with biometrics and/or device credential (PIN/Pattern). */
     private fun canUseBiometricOrCredential(): Boolean {
         val authenticators =
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -67,7 +71,6 @@ class LoginActivity : AppCompatActivity() {
             .canAuthenticate(authenticators) == BiometricManager.BIOMETRIC_SUCCESS
     }
 
-    /** Builds and shows a biometric prompt that works on all supported API levels. */
     private fun showBiometricPromptSafe() {
         val executor = ContextCompat.getMainExecutor(this)
 
@@ -94,7 +97,6 @@ class LoginActivity : AppCompatActivity() {
 
         val promptInfo =
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                // API 30+: can combine biometrics + device credential
                 BiometricPrompt.PromptInfo.Builder()
                     .setTitle("Unlock with biometrics")
                     .setSubtitle("Use your fingerprint or device credential")
@@ -104,7 +106,6 @@ class LoginActivity : AppCompatActivity() {
                     )
                     .build()
             } else {
-                // API < 30: must provide a negative button (DEVICE_CREDENTIAL not allowed here)
                 BiometricPrompt.PromptInfo.Builder()
                     .setTitle("Unlock with biometrics")
                     .setSubtitle("Use your fingerprint")

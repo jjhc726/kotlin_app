@@ -27,7 +27,7 @@ fun QuickDonationDesign(viewModel: DonationViewModel) {
 
     var capturedImage by remember { mutableStateOf<Bitmap?>(null) }
 
-    // Campos de texto
+
     var description by remember { mutableStateOf("") }
     var clothingType by remember { mutableStateOf("") }
     var size by remember { mutableStateOf("") }
@@ -56,7 +56,7 @@ fun QuickDonationDesign(viewModel: DonationViewModel) {
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Caja de la imagen
+
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -83,7 +83,7 @@ fun QuickDonationDesign(viewModel: DonationViewModel) {
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Campos de texto
+
         OutlinedTextField(
             value = description,
             onValueChange = { description = it },
@@ -124,9 +124,9 @@ fun QuickDonationDesign(viewModel: DonationViewModel) {
                 )
                 viewModel.uploadDonation(donation) { success ->
                     if (success) {
-                        println("✅ Donación guardada en Firestore")
+                        println("Donación guardada en Firestore")
                     } else {
-                        println("❌ Error al guardar donación")
+                        println("Error al guardar donación")
                     }
                 }
             },
