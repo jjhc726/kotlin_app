@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -13,11 +14,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
 import com.example.vistaquickdonation.ui.theme.VistaQuickDonationTheme
 import kotlinx.coroutines.launch
 
@@ -68,7 +71,17 @@ fun HomePageScreen() {
                     color = DeepBlue
                 )
 
-                // Only the extra views you requested
+
+                NavigationDrawerItem(
+                    label = { Text("Open Interactive Map") },
+                    selected = false,
+                    onClick = {
+                        scope.launch { drawerState.close() }
+                        go(InteractiveMapActivity::class.java)
+                    }
+                )
+
+
                 NavigationDrawerItem(
                     label = { Text("Go to Charity Profile") },
                     selected = false,
@@ -100,7 +113,7 @@ fun HomePageScreen() {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
-                // Simple top bar (no extra deps)
+                // Top bar with menu button
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -127,6 +140,7 @@ fun HomePageScreen() {
 
                 Spacer(Modifier.height(16.dp))
 
+
                 FeatureCard(
                     container = AquaLight,
                     titleColor = TealDark,
@@ -137,6 +151,26 @@ fun HomePageScreen() {
                 )
 
                 Spacer(Modifier.height(16.dp))
+
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(160.dp),
+                    shape = RoundedCornerShape(18.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+                    elevation = CardDefaults.cardElevation(0.dp)
+                ) {
+                    // Replace R.drawable.home_banner with your actual asset name
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                        contentDescription = "Home banner",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+
+                Spacer(Modifier.height(16.dp))
+
 
                 FeatureCard(
                     container = TealMedium,
