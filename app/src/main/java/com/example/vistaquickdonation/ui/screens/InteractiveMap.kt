@@ -22,6 +22,7 @@ import com.example.vistaquickdonation.viewmodel.DonationMapViewModel
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.*
+import kotlinx.coroutines.delay
 
 
 @SuppressLint("MissingPermission")
@@ -54,7 +55,6 @@ fun DonationMapScreen(viewModel: DonationMapViewModel = viewModel()) {
     val hasPermission by viewModel.hasLocationPermission
     val userLocation by viewModel.userLocation
     val visiblePoints by viewModel.visiblePoints
-    val selectedPoint by viewModel.selectedPoint
     val selectedMarkerState by viewModel.selectedMarkerState
     val currentnearestPoint by viewModel.currentnearestPoint
 
@@ -62,14 +62,15 @@ fun DonationMapScreen(viewModel: DonationMapViewModel = viewModel()) {
     var isMapLoaded by remember { mutableStateOf(false) }
 
     LaunchedEffect(userLocation, visiblePoints, isMapLoaded) {
-
-        if (!isMapLoaded) return@LaunchedEffect
-        viewModel.findAndShowClosestPoint(markerStates)
+            if (!isMapLoaded) return@LaunchedEffect
+            delay(200)
+            viewModel.findAndShowClosestPoint(markerStates)
     }
 
     LaunchedEffect(selectedMarkerState) {
         selectedMarkerState?.showInfoWindow()
     }
+
 
     Scaffold(
         topBar = {
@@ -83,7 +84,9 @@ fun DonationMapScreen(viewModel: DonationMapViewModel = viewModel()) {
             )
         }
     ) { innerPadding ->
-        Box(Modifier.fillMaxSize().padding(innerPadding)) {
+        Box(Modifier
+            .fillMaxSize()
+            .padding(innerPadding)) {
             if (hasPermission) {
                 GoogleMap(
                     modifier = Modifier.fillMaxSize(),
@@ -93,23 +96,23 @@ fun DonationMapScreen(viewModel: DonationMapViewModel = viewModel()) {
                         zoomControlsEnabled = true,
                         myLocationButtonEnabled = true
                     ),
-                    onMapLoaded = { isMapLoaded = true }
+                    onMapLoaded = { isMapLoaded = true },
                 ) {
                     visiblePoints.forEach { p ->
-                        val markerState = remember { MarkerState(position = p.position) }
+                        val markerState = remember (p.id){ MarkerState(position = p.position) }
                         markerStates[p.id] = markerState
                         val isNearest = p == currentnearestPoint
 
                         MarkerInfoWindow(
                             state = markerState,
                             title = p.name,
-                            snippet = "${p.cause} • ${p.schedule}${if (p.accessible) " • Accessible" else ""}",
+                            snippet = "${p.cause} • ${p.schedule}${if (p.accessible) " • Accessible" else "• Not Accessible"}",
                             onClick = {
-                                viewModel.selectedPoint.value = p
                                 viewModel.selectedMarkerState.value = markerState
                                 false
                             }
-                        ) {
+                        )
+                        {
                             Card(
                                 modifier = Modifier.padding(4.dp),
                                 colors = CardDefaults.cardColors(containerColor = White)
@@ -123,11 +126,13 @@ fun DonationMapScreen(viewModel: DonationMapViewModel = viewModel()) {
                                     if (p.accessible) {
                                         Text("Accessible", style = MaterialTheme.typography.bodySmall)
                                     }
+                                    else{Text("Not Accessible", style = MaterialTheme.typography.bodySmall)}
                                 }
                             }
                         }
                     }
                 }
+
             } else {
                 Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                     Text("Location permission is required to use the map.")
@@ -136,13 +141,14 @@ fun DonationMapScreen(viewModel: DonationMapViewModel = viewModel()) {
 
             Card(
                 modifier = Modifier
-                    .padding(top= 12.dp)
+                    .padding(top = 12.dp)
                     .fillMaxWidth(0.95f)
                     .align(Alignment.TopCenter),
                 elevation = CardDefaults.cardElevation(6.dp),
                 colors = CardDefaults.cardColors(containerColor = White)
             ) {
-                Row(Modifier.padding(8.dp)
+                Row(Modifier
+                    .padding(8.dp)
                     .fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     FilterDropdown(
@@ -199,7 +205,9 @@ fun FilterDropdown(
             onValueChange = {},
             readOnly = true,
             label = { Text(label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-            modifier = Modifier.background(White).menuAnchor(),
+            modifier = Modifier
+                .background(White)
+                .menuAnchor(),
             maxLines = 1,
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) }
         )

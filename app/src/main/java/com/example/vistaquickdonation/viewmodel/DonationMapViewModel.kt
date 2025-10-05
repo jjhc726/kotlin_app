@@ -26,7 +26,6 @@ class DonationMapViewModel(application: Application) : AndroidViewModel(applicat
     val cause = mutableStateOf("All")
     val access = mutableStateOf("All")
     val schedule = mutableStateOf("All")
-    val selectedPoint = mutableStateOf<DonationPoint?>(null)
 
     val currentnearestPoint = mutableStateOf<DonationPoint?>(null)
 
@@ -72,7 +71,7 @@ class DonationMapViewModel(application: Application) : AndroidViewModel(applicat
         }
     }
 
-    fun findAndShowClosestPoint(markerStates: Map<String, MarkerState>) {
+    suspend fun findAndShowClosestPoint(markerStates: Map<String, MarkerState>) {
         if (visiblePoints.value.isNotEmpty() && userLocation.value != null) {
             val nearestPoint = visiblePoints.value.minByOrNull { p ->
                 val userLoc = userLocation.value!!
@@ -81,7 +80,8 @@ class DonationMapViewModel(application: Application) : AndroidViewModel(applicat
                 dx * dx + dy * dy
             }
             currentnearestPoint.value = nearestPoint
-            selectedPoint.value = nearestPoint
+
+            delay(200)
 
             nearestPoint?.let {
                 selectedMarkerState.value = markerStates[it.id]
