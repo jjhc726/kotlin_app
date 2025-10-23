@@ -5,7 +5,7 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.example.vistaquickdonation.ui.theme.QuickDonationDesign
+import com.example.vistaquickdonation.ui.screens.QuickDonationDesign
 import com.example.vistaquickdonation.ui.theme.VistaQuickDonationTheme
 import com.example.vistaquickdonation.viewmodel.DonationViewModel
 import com.google.firebase.FirebaseApp

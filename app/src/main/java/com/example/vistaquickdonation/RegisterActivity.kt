@@ -7,7 +7,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.lifecycle.lifecycleScope
-import com.example.vistaquickdonation.data.UserRepository
+import com.example.vistaquickdonation.model.UserRepository
 import com.example.vistaquickdonation.ui.screens.RegisterScreen
 import com.example.vistaquickdonation.ui.theme.VistaQuickDonationTheme
 import kotlinx.coroutines.launch

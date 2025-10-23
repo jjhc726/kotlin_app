@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
@@ -19,11 +17,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.VistaQuickDonation">
 
-
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="@string/google_maps_api_key" />
-
+            android:value="@string/google_maps_api_key"/>
 
         <service
             android:name=".push.MyFirebaseMessagingService"
@@ -36,11 +32,13 @@
             android:name="firebase_messaging_auto_init_enabled"
             android:value="true"/>
 
-        <!-- Activities -->
-        <activity android:name=".InteractiveMapActivity" />
-        <activity android:name=".HomePageActivity" />
-        <activity android:name=".CharityProfileActivity" />
-        <activity android:name=".PickUpAtHomeActivity" />
+        <activity android:name=".InteractiveMapActivity"/>
+        <activity android:name=".HomePageActivity"/>
+        <activity android:name=".CharityProfileActivity"/>
+        <activity android:name=".PickUpAtHomeActivity"/>
+        <activity android:name=".ScheduleDonationActivity"/>
+        <activity android:name=".QuickDonationActivity"/>
+        <activity android:name=".RegisterActivity"/>
 
         <activity
             android:name=".MainActivity"
@@ -51,13 +49,12 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-
-        <activity android:name=".ScheduleDonationActivity" />
-        <activity android:name=".QuickDonationActivity" />
         <activity
             android:name=".LoginActivity"
             android:exported="true"
-            android:theme="@style/Theme.VistaQuickDonation" />
-        <activity android:name=".RegisterActivity" />
+            android:theme="@style/Theme.VistaQuickDonation">
+
+        </activity>
+
     </application>
 </manifest>

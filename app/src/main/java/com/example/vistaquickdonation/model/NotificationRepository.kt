@@ -1,6 +1,5 @@
-package com.example.vistaquickdonation.data
+package com.example.vistaquickdonation.model
 
-import com.example.vistaquickdonation.model.AppNotification
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.channels.awaitClose

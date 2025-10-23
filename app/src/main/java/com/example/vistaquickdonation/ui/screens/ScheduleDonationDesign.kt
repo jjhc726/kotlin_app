@@ -1,4 +1,4 @@
-package com.example.vistaquickdonation.ui.theme
+package com.example.vistaquickdonation.ui.screens
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity

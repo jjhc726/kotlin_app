@@ -7,13 +7,11 @@ import androidx.annotation.RequiresPermission
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.viewModelScope
 import com.example.vistaquickdonation.model.DonationPoint
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.MarkerState
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 class DonationMapViewModel(application: Application) : AndroidViewModel(application) {
 

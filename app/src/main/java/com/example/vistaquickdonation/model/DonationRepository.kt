@@ -1,11 +1,9 @@
-package com.example.vistaquickdonation.data
+package com.example.vistaquickdonation.model
 
-import com.example.vistaquickdonation.model.DonationItem
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
-import com.google.firebase.firestore.Query
 import kotlinx.coroutines.tasks.await
 
 class DonationRepository(
@@ -35,7 +33,7 @@ class DonationRepository(
 
     fun listenRecentDonations(
         userEmail: String,
-        limit: Int = 20,
+        limit: Int = 5,
         onChange: (List<DonationItem>) -> Unit,
         onError: (Exception) -> Unit = {}
     ): ListenerRegistration {

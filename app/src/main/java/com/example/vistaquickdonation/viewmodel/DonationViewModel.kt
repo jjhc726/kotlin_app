@@ -4,7 +4,7 @@ import android.app.Application
 import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.vistaquickdonation.data.DonationRepository
+import com.example.vistaquickdonation.model.DonationRepository
 import com.example.vistaquickdonation.model.DonationItem
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.ListenerRegistration
@@ -58,7 +58,7 @@ class DonationViewModel(app: Application) : AndroidViewModel(app) {
 
             recentListener = repository.listenRecentDonations(
                 userEmail = email,
-                limit = 100,
+                limit = 5,
                 onChange = { list ->
                     val now = Calendar.getInstance()
                     val currYear = now.get(Calendar.YEAR)

@@ -10,10 +10,11 @@ import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
-import com.example.vistaquickdonation.data.UserRepository
+import com.example.vistaquickdonation.model.UserRepository
 import com.example.vistaquickdonation.ui.login.LoginScreen
 import com.example.vistaquickdonation.ui.theme.VistaQuickDonationTheme
 import kotlinx.coroutines.launch
+import androidx.core.content.edit
 
 class LoginActivity : AppCompatActivity() {
 
@@ -34,9 +35,9 @@ class LoginActivity : AppCompatActivity() {
                                 // Guarda el email de FirebaseAuth (fallback al escrito)
                                 val authedEmail = repo.currentEmail() ?: email.trim().lowercase()
                                 getSharedPreferences("session", MODE_PRIVATE)
-                                    .edit()
-                                    .putString("email", authedEmail)
-                                    .apply()
+                                    .edit {
+                                        putString("email", authedEmail)
+                                    }
 
                                 goToHome()
                             } else {
@@ -79,8 +80,6 @@ class LoginActivity : AppCompatActivity() {
         val callback = object : BiometricPrompt.AuthenticationCallback() {
             override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
                 super.onAuthenticationSucceeded(result)
-                // Si quieres validar que exista sesión de FirebaseAuth antes de pasar:
-                // if (repo.currentEmail() != null) goToHome() else Toast.makeText(...).show()
                 goToHome()
             }
 
