@@ -35,11 +35,16 @@ class NotificationsViewModel(
         listener?.remove()
         listener = repo.listenRecentDonations(email, limit = 30, onChange = { list ->
             _notifications.value = list.map { it.toNotification() }
+
+            val newest = list.maxByOrNull { it.createdAt?.toDate()?.time ?: 0L }
+            _lastDonationText.value = newest?.createdAt?.toPretty()
         })
 
         viewModelScope.launch {
-            val ts = repo.getLastDonationTimestamp(email)
-            _lastDonationText.value = ts?.toPretty()
+            if (_lastDonationText.value == null) {
+                val ts = repo.getLastDonationTimestamp(email)
+                _lastDonationText.value = ts?.toPretty()
+            }
         }
     }
 

@@ -68,7 +68,7 @@ fun HomePageScreen() {
     val scrollState = rememberScrollState()
 
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(sessionEmail) {
         donationViewModel.loadThisMonthDonations()
         sessionEmail?.let { notificationsVM.start(it) }
     }

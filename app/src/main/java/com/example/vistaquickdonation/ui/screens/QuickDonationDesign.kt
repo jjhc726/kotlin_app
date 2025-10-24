@@ -21,6 +21,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.vistaquickdonation.model.DonationItem
 import com.example.vistaquickdonation.viewmodel.DonationViewModel
+import android.app.Activity
+import android.content.Intent
+import androidx.compose.ui.platform.LocalContext
+import com.example.vistaquickdonation.HomePageActivity
 
 @Composable
 fun QuickDonationDesign(viewModel: DonationViewModel) {
@@ -32,6 +36,8 @@ fun QuickDonationDesign(viewModel: DonationViewModel) {
     var clothingType by remember { mutableStateOf("") }
     var size by remember { mutableStateOf("") }
     var brand by remember { mutableStateOf("") }
+
+    val context = LocalContext.current
 
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicturePreview()
@@ -124,9 +130,14 @@ fun QuickDonationDesign(viewModel: DonationViewModel) {
                 )
                 viewModel.uploadDonation(donation) { success ->
                     if (success) {
-                        println("Donación guardada en Firestore")
+                        println("Donation stored successfully")
+                        val intent = Intent(context, HomePageActivity::class.java).apply {
+                            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
+                        context.startActivity(intent)
+                        (context as? Activity)?.finish()
                     } else {
-                        println("Error al guardar donación")
+                        println("Error at saving the donation")
                     }
                 }
             },

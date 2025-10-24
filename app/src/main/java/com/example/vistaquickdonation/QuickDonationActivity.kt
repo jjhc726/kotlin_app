@@ -14,7 +14,6 @@ class QuickDonationActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // 🔹 Inicializar Firebase
         FirebaseApp.initializeApp(this)
         Log.d("FIREBASE_CHECK", "Firebase initialized: ${FirebaseApp.getApps(this).size} app(s)")
 
