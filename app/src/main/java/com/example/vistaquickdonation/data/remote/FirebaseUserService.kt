@@ -21,13 +21,25 @@ class FirebaseUserService(
         }
     }
 
-    suspend fun signUp(email: String, password: String): Boolean {
+    suspend fun signUp(
+        name: String,
+        email: String,
+        password: String,
+        city: String,
+        interests: String
+    ): Boolean {
         val key = email.trim().lowercase()
         return try {
             auth.createUserWithEmailAndPassword(key, password).await()
 
-            // Crear documento de perfil
-            val profile = mapOf("email" to key)
+            val profile = mapOf(
+                "name" to name,
+                "email" to key,
+                "city" to city,
+                "interests" to interests,
+                "createdAt" to com.google.firebase.Timestamp.now()
+            )
+
             users.document(key).set(profile).await()
 
             true

@@ -17,7 +17,13 @@ class RegisterViewModel : ViewModel() {
     val interest = mutableStateOf("")
 
     suspend fun registerUser(): Boolean {
-        return repository.signUp(email.value, password.value)
+        return repository.signUp(
+            name = fullName.value,
+            email = email.value,
+            password = password.value,
+            city = city.value,
+            interests = interest.value
+        )
     }
 
     fun showToast(context: Context, message: String) {

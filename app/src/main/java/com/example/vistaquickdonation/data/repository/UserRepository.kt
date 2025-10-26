@@ -9,8 +9,14 @@ class UserRepository(
         return service.signIn(email, password)
     }
 
-    suspend fun signUp(email: String, password: String): Boolean {
-        return service.signUp(email, password)
+    suspend fun signUp(
+        name: String,
+        email: String,
+        password: String,
+        city: String,
+        interests: String
+    ): Boolean {
+        return service.signUp(name, email, password, city, interests)
     }
 
     fun currentEmail(): String? = service.currentEmail()
