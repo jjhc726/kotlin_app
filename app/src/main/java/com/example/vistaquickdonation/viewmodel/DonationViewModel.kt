@@ -1,13 +1,13 @@
 package com.example.vistaquickdonation.viewmodel
 
 import android.app.Application
-import android.content.Context
 import android.graphics.Bitmap
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.vistaquickdonation.data.model.DonationItem
 import com.example.vistaquickdonation.data.repository.DonationRepository
+import com.example.vistaquickdonation.data.repository.UserRepository
 import com.google.firebase.firestore.ListenerRegistration
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -34,13 +34,9 @@ class DonationViewModel(app: Application) : AndroidViewModel(app) {
 
     private var recentListener: ListenerRegistration? = null
 
-    private fun sessionEmail(): String? =
-        getApplication<Application>()
-            .getSharedPreferences("session", Context.MODE_PRIVATE)
-            .getString("email", null)
-            ?.trim()
-            ?.lowercase()
+    private val userRepo = UserRepository()
 
+    private fun sessionEmail(): String? = userRepo.currentEmail()
     fun uploadDonation(onResult: (Boolean) -> Unit) {
         val donation = DonationItem(
             description = description.value,

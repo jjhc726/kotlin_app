@@ -48,10 +48,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.edit
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.vistaquickdonation.Secondary
+import com.example.vistaquickdonation.data.repository.UserRepository
 import com.example.vistaquickdonation.ui.screens.charity.CharityProfileActivity
 import com.example.vistaquickdonation.ui.screens.interactiveMap.InteractiveMapActivity
+import com.example.vistaquickdonation.ui.screens.login.LoginActivity
 import com.example.vistaquickdonation.ui.screens.pickUpAtHome.PickUpAtHomeActivity
 import com.example.vistaquickdonation.ui.screens.quickDonation.QuickDonationActivity
 import com.example.vistaquickdonation.ui.screens.scheduledonation.ScheduleDonationActivity
@@ -75,11 +78,6 @@ fun HomePageScreen() {
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
 
-    val sessionEmail = remember {
-        context.getSharedPreferences("session", Context.MODE_PRIVATE)
-            .getString("email", null)
-    }
-
     val donationVM = viewModel<DonationViewModel>()
     val topDonors by donationVM.topDonors.collectAsState()
 
@@ -89,6 +87,9 @@ fun HomePageScreen() {
 
     var showNotifications by remember { mutableStateOf(false) }
     val notifSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    val userRepo = remember { UserRepository() }
+    val sessionEmail = remember { userRepo.currentEmail() }
 
     LaunchedEffect(Unit) {
         donationVM.loadTopDonors()
@@ -132,6 +133,26 @@ fun HomePageScreen() {
                         logDonationPreference("pickupAtHome")
                         scope.launch { drawerState.close() }
                         go(PickUpAtHomeActivity::class.java)
+                    }
+                )
+
+                Spacer(Modifier.height(12.dp))
+
+                NavigationDrawerItem(
+                    label = { Text("Sign Out") },
+                    selected = false,
+                    onClick = {
+                        scope.launch {
+                            drawerState.close()
+                            userRepo.signOut()
+
+                            val prefs = context.getSharedPreferences("session", Context.MODE_PRIVATE)
+                            prefs.edit { clear() }
+
+                            val intent = Intent(context, LoginActivity::class.java)
+                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                            context.startActivity(intent)
+                        }
                     }
                 )
             }
