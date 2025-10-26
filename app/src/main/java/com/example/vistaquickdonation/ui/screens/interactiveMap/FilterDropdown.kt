@@ -3,6 +3,7 @@ package com.example.vistaquickdonation.ui.screens.interactiveMap
 import androidx.compose.foundation.background
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.OutlinedTextField
@@ -47,7 +48,10 @@ fun FilterDropdown(
                 )
             },
             modifier = Modifier
-                .menuAnchor()
+                .menuAnchor(
+                    type = ExposedDropdownMenuAnchorType.PrimaryNotEditable,
+                    enabled = true
+                )
                 .background(White),
             maxLines = 1,
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
