@@ -32,7 +32,7 @@
             android:value="true"/>
 
         <activity android:name=".ui.screens.interactiveMap.InteractiveMapActivity"/>
-        <activity android:name=".ui.HomePageActivity"/>
+        <activity android:name=".ui.screens.home.HomePageActivity"/>
         <activity android:name=".ui.screens.charity.CharityProfileActivity"/>
         <activity android:name=".ui.screens.pickUpAtHome.PickUpAtHomeActivity"/>
         <activity android:name=".ui.screens.scheduledonation.ScheduleDonationActivity"/>

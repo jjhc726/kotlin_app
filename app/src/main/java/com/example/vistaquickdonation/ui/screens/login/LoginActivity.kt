@@ -7,7 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import com.example.vistaquickdonation.ui.HomePageActivity
+import com.example.vistaquickdonation.ui.screens.home.HomePageActivity
 import com.example.vistaquickdonation.ui.theme.VistaQuickDonationTheme
 import com.example.vistaquickdonation.utils.BiometricHelper
 import com.example.vistaquickdonation.viewmodel.LoginViewModel

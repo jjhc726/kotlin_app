@@ -27,7 +27,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.vistaquickdonation.ui.HomePageActivity
+import com.example.vistaquickdonation.ui.screens.home.HomePageActivity
 import com.example.vistaquickdonation.viewmodel.DonationViewModel
 
 @Composable
