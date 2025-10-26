@@ -3,15 +3,45 @@ package com.example.vistaquickdonation.ui.screens.home
 import android.content.Context
 import android.content.Intent
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.rounded.Checkroom
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.NavigationDrawerItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDrawerState
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -25,7 +55,13 @@ import com.example.vistaquickdonation.ui.screens.interactiveMap.InteractiveMapAc
 import com.example.vistaquickdonation.ui.screens.pickUpAtHome.PickUpAtHomeActivity
 import com.example.vistaquickdonation.ui.screens.quickDonation.QuickDonationActivity
 import com.example.vistaquickdonation.ui.screens.scheduledonation.ScheduleDonationActivity
-import com.example.vistaquickdonation.ui.theme.*
+import com.example.vistaquickdonation.ui.theme.AquaLight
+import com.example.vistaquickdonation.ui.theme.DeepBlue
+import com.example.vistaquickdonation.ui.theme.MediumBlue
+import com.example.vistaquickdonation.ui.theme.SoftBlue
+import com.example.vistaquickdonation.ui.theme.TealDark
+import com.example.vistaquickdonation.ui.theme.TealMedium
+import com.example.vistaquickdonation.ui.theme.White
 import com.example.vistaquickdonation.utils.logDonationPreference
 import com.example.vistaquickdonation.viewmodel.DonationViewModel
 import com.example.vistaquickdonation.viewmodel.NotificationsViewModel
@@ -45,7 +81,7 @@ fun HomePageScreen() {
     }
 
     val donationVM = viewModel<DonationViewModel>()
-    val monthlyDonations by donationVM.monthlyDonations.collectAsState()
+    val topDonors by donationVM.topDonors.collectAsState()
 
     val notificationsVM = viewModel<NotificationsViewModel>()
     val notifications by notificationsVM.notifications.collectAsState()
@@ -54,8 +90,8 @@ fun HomePageScreen() {
     var showNotifications by remember { mutableStateOf(false) }
     val notifSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    LaunchedEffect(sessionEmail) {
-        donationVM.loadThisMonthDonations()
+    LaunchedEffect(Unit) {
+        donationVM.loadTopDonors()
         sessionEmail?.let { notificationsVM.start(it) }
     }
 
@@ -150,7 +186,9 @@ fun HomePageScreen() {
                 Spacer(Modifier.height(16.dp))
 
                 Card(
-                    modifier = Modifier.fillMaxWidth().height(160.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(160.dp),
                     shape = RoundedCornerShape(18.dp),
                     colors = CardDefaults.cardColors(containerColor = AquaLight)
                 ) {
@@ -175,16 +213,26 @@ fun HomePageScreen() {
                 )
 
                 Spacer(Modifier.height(16.dp))
-                Text("This Month's Donations", color = DeepBlue)
-                if (monthlyDonations.isEmpty()) {
-                    Text("No donations yet this month", color = Secondary)
+                Text(
+                    text = "Top 5 Donors",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = DeepBlue,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+
+                if (topDonors.isEmpty()) {
+                    Text("No donations recorded yet", color = Secondary)
                 } else {
-                    monthlyDonations.forEach {
-                        Text("- ${it.description} (${it.clothingType})", color = DeepBlue)
+                    topDonors.forEachIndexed { index, donor ->
+                        Text(
+                            text = "${index + 1}. ${donor.name} (${donor.totalDonations})",
+                            color = DeepBlue,
+                            fontSize = 15.sp
+                        )
                     }
                 }
 
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(12.dp))
                 Text("Last donation: ${lastDonationText ?: "—"}", color = DeepBlue)
                 Spacer(Modifier.height(12.dp))
                 Text(
@@ -200,7 +248,9 @@ fun HomePageScreen() {
                     sheetState = notifSheetState
                 ) {
                     Column(
-                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
                         horizontalAlignment = Alignment.Start
                     ) {
                         Text("Notifications", color = DeepBlue)

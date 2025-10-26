@@ -8,13 +8,16 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.vistaquickdonation.data.model.DonationItem
 import com.example.vistaquickdonation.data.repository.DonationRepository
-import com.google.firebase.Timestamp
 import com.google.firebase.firestore.ListenerRegistration
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import java.util.Calendar
+
+data class TopDonor(
+    val name: String,
+    val totalDonations: Int
+)
 
 class DonationViewModel(app: Application) : AndroidViewModel(app) {
 
@@ -26,8 +29,8 @@ class DonationViewModel(app: Application) : AndroidViewModel(app) {
     val size = mutableStateOf("")
     val brand = mutableStateOf("")
 
-    private val _monthlyDonations = MutableStateFlow<List<DonationItem>>(emptyList())
-    val monthlyDonations: StateFlow<List<DonationItem>> = _monthlyDonations.asStateFlow()
+    private val _topDonors = MutableStateFlow<List<TopDonor>>(emptyList())
+    val topDonors: StateFlow<List<TopDonor>> = _topDonors.asStateFlow()
 
     private var recentListener: ListenerRegistration? = null
 
@@ -60,35 +63,12 @@ class DonationViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun loadThisMonthDonations() {
-        recentListener?.remove()
-        recentListener = null
-
+    fun loadTopDonors() {
         viewModelScope.launch {
-            val email = sessionEmail() ?: run {
-                _monthlyDonations.value = emptyList()
-                return@launch
-            }
-
-            recentListener = repository.listenRecentDonations(
-                userEmail = email,
+            repository.getTopDonors(
                 limit = 5,
-                onChange = { list ->
-                    val now = Calendar.getInstance()
-                    val currYear = now.get(Calendar.YEAR)
-                    val currMonth = now.get(Calendar.MONTH)
-
-                    val monthList = list.filter { item ->
-                        val date = (item.createdAt ?: Timestamp.now()).toDate()
-                        val cal = Calendar.getInstance().apply { time = date }
-                        cal.get(Calendar.YEAR) == currYear &&
-                                cal.get(Calendar.MONTH) == currMonth
-                    }
-                    _monthlyDonations.value = monthList
-                },
-                onError = {
-                    _monthlyDonations.value = emptyList()
-                }
+                onSuccess = { topList -> _topDonors.value = topList },
+                onError = { _topDonors.value = emptyList() }
             )
         }
     }

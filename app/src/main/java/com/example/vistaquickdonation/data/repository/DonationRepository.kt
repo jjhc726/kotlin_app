@@ -2,6 +2,7 @@ package com.example.vistaquickdonation.data.repository
 
 import com.example.vistaquickdonation.data.model.DonationItem
 import com.example.vistaquickdonation.data.remote.FirebaseDonationService
+import com.example.vistaquickdonation.viewmodel.TopDonor
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.ListenerRegistration
 
@@ -19,6 +20,18 @@ class DonationRepository(
         onError: (Exception) -> Unit = {}
     ): ListenerRegistration {
         return service.listenRecentDonations(userEmail, limit, onChange, onError)
+    }
+
+    fun getTopDonors(
+        limit: Int = 5,
+        onSuccess: (List<TopDonor>) -> Unit,
+        onError: (Exception) -> Unit
+    ) {
+        try {
+            service.getTopDonors(limit, onSuccess, onError)
+        } catch (e: Exception) {
+            onError(e)
+        }
     }
 
     suspend fun getLastDonationTimestamp(userEmail: String): Timestamp? {
