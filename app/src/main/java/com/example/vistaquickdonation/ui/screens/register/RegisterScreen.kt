@@ -1,8 +1,11 @@
 package com.example.vistaquickdonation.ui.screens.register
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -52,7 +55,7 @@ fun RegisterScreen(
     val email = viewModel.email.value
     val password = viewModel.password.value
     val city = viewModel.city.value
-    val interest = viewModel.interest.value
+    val selectedInterests = viewModel.interests
 
     Box(
         modifier = Modifier
@@ -111,8 +114,21 @@ fun RegisterScreen(
                         RegisterTextField(password, { viewModel.password.value = it }, "Contraseña", password = true)
                         Spacer(Modifier.height(16.dp))
                         RegisterTextField(city, { viewModel.city.value = it }, "Ciudad")
+
                         Spacer(Modifier.height(16.dp))
-                        RegisterTextField(interest, { viewModel.interest.value = it }, "Intereses (Donar, Voluntariado...)")
+
+                        Text(
+                            text = "Selecciona tus intereses",
+                            color = DeepBlue,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+
+                        InterestChips(
+                            selectedInterests = selectedInterests,
+                            onToggleInterest = { viewModel.toggleInterest(it) }
+                        )
                     }
                 }
 
@@ -151,16 +167,57 @@ fun RegisterScreen(
 }
 
 @Composable
+private fun InterestChips(
+    selectedInterests: List<String>,
+    onToggleInterest: (String) -> Unit
+) {
+    val options = listOf("Donar", "Voluntariado")
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        options.forEach { option ->
+            val isSelected = selectedInterests.contains(option)
+            Box(
+                modifier = Modifier
+                    .background(
+                        color = if (isSelected) DeepBlue else Color.White,
+                        shape = RoundedCornerShape(20.dp)
+                    )
+                    .clickable { onToggleInterest(option) }
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Text(
+                    text = option,
+                    color = if (isSelected) Color.White else DeepBlue,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+        }
+    }
+}
+
+@Composable
 private fun RegisterTextField(
     value: String,
     onValueChange: (String) -> Unit,
     label: String,
     password: Boolean = false
 ) {
+    val hasText = value.isNotEmpty()
+
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        label = { Text(label, color = DeepBlue, fontSize = 14.sp) },
+        label = {
+            Text(
+                label,
+                fontSize = 14.sp,
+                color = if (hasText) AquaLight else DeepBlue
+            )
+        },
         singleLine = true,
         visualTransformation = if (password) PasswordVisualTransformation() else VisualTransformation.None,
         modifier = Modifier.fillMaxWidth(),
@@ -171,10 +228,11 @@ private fun RegisterTextField(
             focusedIndicatorColor = TealMedium,
             unfocusedIndicatorColor = MediumBlue,
             cursorColor = TealMedium,
-            focusedLabelColor = DeepBlue,
-            unfocusedLabelColor = DeepBlue,
             focusedTextColor = DeepBlue,
-            unfocusedTextColor = DeepBlue
+            unfocusedTextColor = DeepBlue,
+            focusedLabelColor = AquaLight
         )
     )
 }
+
+

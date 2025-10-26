@@ -25,20 +25,27 @@ class RegisterActivity : ComponentActivity() {
                 RegisterScreen(
                     viewModel = viewModel,
                     onRegister = {
-                        lifecycleScope.launch {
-                            val ok = viewModel.registerUser()
-                            if (ok) {
-                                viewModel.showToast(
-                                    context = this@RegisterActivity,
-                                    message = "Usuario registrado ✅"
-                                )
-                                viewModel.clearForm()
-                                goToLogin()
-                            } else {
-                                viewModel.showToast(
-                                    context = this@RegisterActivity,
-                                    message = "Error al registrar ❌"
-                                )
+                        val validationError = viewModel.validateInputs()
+                        if (validationError != null) {
+                            // Mostrar mensaje de error específico
+                            viewModel.showToast(this, validationError)
+                        } else {
+                            // Si todo está correcto, intentar registro
+                            lifecycleScope.launch {
+                                val ok = viewModel.registerUser()
+                                if (ok) {
+                                    viewModel.showToast(
+                                        context = this@RegisterActivity,
+                                        message = "Usuario registrado ✅"
+                                    )
+                                    viewModel.clearForm()
+                                    goToLogin()
+                                } else {
+                                    viewModel.showToast(
+                                        context = this@RegisterActivity,
+                                        message = "Error al registrar ❌ Intenta nuevamente."
+                                    )
+                                }
                             }
                         }
                     },
