@@ -1,48 +1,44 @@
-package com.example.vistaquickdonation.ui.screens
+package com.example.vistaquickdonation.ui.screens.quickDonation
 
-import android.graphics.Bitmap
+import android.app.Activity
+import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.vistaquickdonation.data.model.DonationItem
-import com.example.vistaquickdonation.viewmodel.DonationViewModel
-import android.app.Activity
-import android.content.Intent
-import androidx.compose.ui.platform.LocalContext
 import com.example.vistaquickdonation.ui.HomePageActivity
+import com.example.vistaquickdonation.viewmodel.DonationViewModel
 
 @Composable
 fun QuickDonationDesign(viewModel: DonationViewModel) {
-
-    var capturedImage by remember { mutableStateOf<Bitmap?>(null) }
-
-
-    var description by remember { mutableStateOf("") }
-    var clothingType by remember { mutableStateOf("") }
-    var size by remember { mutableStateOf("") }
-    var brand by remember { mutableStateOf("") }
 
     val context = LocalContext.current
 
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicturePreview()
     ) { bitmap ->
-        capturedImage = bitmap
+        viewModel.capturedImage.value = bitmap
     }
 
     Column(
@@ -62,7 +58,6 @@ fun QuickDonationDesign(viewModel: DonationViewModel) {
 
         Spacer(modifier = Modifier.height(20.dp))
 
-
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -70,9 +65,10 @@ fun QuickDonationDesign(viewModel: DonationViewModel) {
                 .background(Color(0xFFBCEEF5), shape = RoundedCornerShape(4.dp)),
             contentAlignment = Alignment.Center
         ) {
+            val capturedImage = viewModel.capturedImage.value
             if (capturedImage != null) {
                 Image(
-                    bitmap = capturedImage!!.asImageBitmap(),
+                    bitmap = capturedImage.asImageBitmap(),
                     contentDescription = "Captured Image",
                     modifier = Modifier.fillMaxSize()
                 )
@@ -89,32 +85,31 @@ fun QuickDonationDesign(viewModel: DonationViewModel) {
 
         Spacer(modifier = Modifier.height(20.dp))
 
-
         OutlinedTextField(
-            value = description,
-            onValueChange = { description = it },
+            value = viewModel.description.value,
+            onValueChange = { viewModel.description.value = it },
             label = { Text("Description (Required)") },
             colors = OutlinedTextFieldDefaults.colors()
         )
         Spacer(modifier = Modifier.height(12.dp))
 
         OutlinedTextField(
-            value = clothingType,
-            onValueChange = { clothingType = it },
+            value = viewModel.clothingType.value,
+            onValueChange = { viewModel.clothingType.value = it },
             label = { Text("Clothing Type (Required)") }
         )
         Spacer(modifier = Modifier.height(12.dp))
 
         OutlinedTextField(
-            value = size,
-            onValueChange = { size = it },
+            value = viewModel.size.value,
+            onValueChange = { viewModel.size.value = it },
             label = { Text("Size (Required)") }
         )
         Spacer(modifier = Modifier.height(12.dp))
 
         OutlinedTextField(
-            value = brand,
-            onValueChange = { brand = it },
+            value = viewModel.brand.value,
+            onValueChange = { viewModel.brand.value = it },
             label = { Text("Brand (Required)") }
         )
 
@@ -122,13 +117,7 @@ fun QuickDonationDesign(viewModel: DonationViewModel) {
 
         Button(
             onClick = {
-                val donation = DonationItem(
-                    description = description,
-                    clothingType = clothingType,
-                    size = size,
-                    brand = brand
-                )
-                viewModel.uploadDonation(donation) { success ->
+                viewModel.uploadDonation { success ->
                     if (success) {
                         println("Donation stored successfully")
                         val intent = Intent(context, HomePageActivity::class.java).apply {
@@ -137,7 +126,7 @@ fun QuickDonationDesign(viewModel: DonationViewModel) {
                         context.startActivity(intent)
                         (context as? Activity)?.finish()
                     } else {
-                        println("Error at saving the donation")
+                        println("Error saving the donation")
                     }
                 }
             },

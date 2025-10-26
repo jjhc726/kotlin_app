@@ -1,20 +1,20 @@
-package com.example.vistaquickdonation
+package com.example.vistaquickdonation.ui.screens.register
 
 import android.content.Intent
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.lifecycle.lifecycleScope
-import com.example.vistaquickdonation.data.repository.UserRepository
 import com.example.vistaquickdonation.ui.screens.login.LoginActivity
-import com.example.vistaquickdonation.ui.screens.RegisterScreen
 import com.example.vistaquickdonation.ui.theme.VistaQuickDonationTheme
+import com.example.vistaquickdonation.viewmodel.RegisterViewModel
 import kotlinx.coroutines.launch
 
 class RegisterActivity : ComponentActivity() {
-    private val repo = UserRepository()
+
+    private val viewModel: RegisterViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -23,22 +23,22 @@ class RegisterActivity : ComponentActivity() {
         setContent {
             VistaQuickDonationTheme {
                 RegisterScreen(
-                    onRegister = { email, password ->
+                    viewModel = viewModel,
+                    onRegister = {
                         lifecycleScope.launch {
-                            val ok = repo.signUp(email, password)
+                            val ok = viewModel.registerUser()
                             if (ok) {
-                                Toast.makeText(
-                                    this@RegisterActivity,
-                                    "Usuario registrado ✅",
-                                    Toast.LENGTH_SHORT
-                                ).show()
+                                viewModel.showToast(
+                                    context = this@RegisterActivity,
+                                    message = "Usuario registrado ✅"
+                                )
+                                viewModel.clearForm()
                                 goToLogin()
                             } else {
-                                Toast.makeText(
-                                    this@RegisterActivity,
-                                    "Error al registrar ❌",
-                                    Toast.LENGTH_SHORT
-                                ).show()
+                                viewModel.showToast(
+                                    context = this@RegisterActivity,
+                                    message = "Error al registrar ❌"
+                                )
                             }
                         }
                     },

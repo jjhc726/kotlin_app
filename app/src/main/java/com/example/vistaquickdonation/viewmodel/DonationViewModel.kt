@@ -2,10 +2,12 @@ package com.example.vistaquickdonation.viewmodel
 
 import android.app.Application
 import android.content.Context
+import android.graphics.Bitmap
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.vistaquickdonation.data.repository.DonationRepository
 import com.example.vistaquickdonation.data.model.DonationItem
+import com.example.vistaquickdonation.data.repository.DonationRepository
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.ListenerRegistration
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,6 +19,12 @@ import java.util.Calendar
 class DonationViewModel(app: Application) : AndroidViewModel(app) {
 
     private val repository = DonationRepository()
+
+    val capturedImage = mutableStateOf<Bitmap?>(null)
+    val description = mutableStateOf("")
+    val clothingType = mutableStateOf("")
+    val size = mutableStateOf("")
+    val brand = mutableStateOf("")
 
     private val _monthlyDonations = MutableStateFlow<List<DonationItem>>(emptyList())
     val monthlyDonations: StateFlow<List<DonationItem>> = _monthlyDonations.asStateFlow()
@@ -30,11 +38,17 @@ class DonationViewModel(app: Application) : AndroidViewModel(app) {
             ?.trim()
             ?.lowercase()
 
-    fun uploadDonation(item: DonationItem, onResult: (Boolean) -> Unit) {
-        makeDonation(item, onResult)
+    fun uploadDonation(onResult: (Boolean) -> Unit) {
+        val donation = DonationItem(
+            description = description.value,
+            clothingType = clothingType.value,
+            size = size.value,
+            brand = brand.value
+        )
+        makeDonation(donation, onResult)
     }
 
-    fun makeDonation(item: DonationItem, onResult: (Boolean) -> Unit) {
+    private fun makeDonation(item: DonationItem, onResult: (Boolean) -> Unit) {
         viewModelScope.launch {
             val email = sessionEmail()
             if (email.isNullOrEmpty()) {
@@ -73,6 +87,7 @@ class DonationViewModel(app: Application) : AndroidViewModel(app) {
                     _monthlyDonations.value = monthList
                 },
                 onError = {
+                    _monthlyDonations.value = emptyList()
                 }
             )
         }

@@ -12,7 +12,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.vistaquickdonation.RegisterActivity
+import com.example.vistaquickdonation.ui.screens.register.RegisterActivity
 import com.example.vistaquickdonation.ui.theme.*
 
 @Composable

@@ -31,9 +31,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.material.icons.rounded.Checkroom
 import com.example.vistaquickdonation.ui.screens.charity.CharityProfileActivity
 import com.example.vistaquickdonation.ui.screens.interactiveMap.InteractiveMapActivity
-import com.example.vistaquickdonation.PickUpAtHomeActivity
-import com.example.vistaquickdonation.QuickDonationActivity
-import com.example.vistaquickdonation.ScheduleDonationActivity
+import com.example.vistaquickdonation.ui.screens.pickUpAtHome.PickUpAtHomeActivity
+import com.example.vistaquickdonation.ui.screens.quickDonation.QuickDonationActivity
+import com.example.vistaquickdonation.ui.screens.scheduledonation.ScheduleDonationActivity
 import com.example.vistaquickdonation.Secondary
 
 

@@ -34,10 +34,10 @@
         <activity android:name=".ui.screens.interactiveMap.InteractiveMapActivity"/>
         <activity android:name=".ui.HomePageActivity"/>
         <activity android:name=".ui.screens.charity.CharityProfileActivity"/>
-        <activity android:name=".PickUpAtHomeActivity"/>
-        <activity android:name=".ScheduleDonationActivity"/>
-        <activity android:name=".QuickDonationActivity"/>
-        <activity android:name=".RegisterActivity"/>
+        <activity android:name=".ui.screens.pickUpAtHome.PickUpAtHomeActivity"/>
+        <activity android:name=".ui.screens.scheduledonation.ScheduleDonationActivity"/>
+        <activity android:name=".ui.screens.quickDonation.QuickDonationActivity"/>
+        <activity android:name=".ui.screens.register.RegisterActivity"/>
 
         <activity
             android:name=".MainActivity"

@@ -1,10 +1,9 @@
-package com.example.vistaquickdonation
+package com.example.vistaquickdonation.ui.screens.scheduledonation
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.example.vistaquickdonation.ui.screens.ScheduleDonationDesign
 import com.example.vistaquickdonation.ui.theme.VistaQuickDonationTheme
 
 class ScheduleDonationActivity : ComponentActivity() {

@@ -1,34 +1,58 @@
-package com.example.vistaquickdonation.ui.screens
+package com.example.vistaquickdonation.ui.screens.register
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.vistaquickdonation.ui.theme.*
+import com.example.vistaquickdonation.ui.theme.AquaLight
+import com.example.vistaquickdonation.ui.theme.DeepBlue
+import com.example.vistaquickdonation.ui.theme.MediumBlue
+import com.example.vistaquickdonation.ui.theme.SoftBlue
+import com.example.vistaquickdonation.ui.theme.TealDark
+import com.example.vistaquickdonation.ui.theme.TealMedium
+import com.example.vistaquickdonation.viewmodel.RegisterViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(
-    onRegister: (String, String) -> Unit,   // ✅ nuevo
-    onGoToLogin: () -> Unit                 // ✅ para navegar a login
+    viewModel: RegisterViewModel,
+    onRegister: () -> Unit,
+    onGoToLogin: () -> Unit
 ) {
-    var fullName by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var city by remember { mutableStateOf("") }
-    var interest by remember { mutableStateOf("") }
+    val fullName = viewModel.fullName.value
+    val email = viewModel.email.value
+    val password = viewModel.password.value
+    val city = viewModel.city.value
+    val interest = viewModel.interest.value
 
     Box(
         modifier = Modifier
@@ -80,26 +104,22 @@ fun RegisterScreen(
                             .padding(horizontal = 20.dp, vertical = 24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        RegisterTextField(fullName, { fullName = it }, "Nombre completo")
+                        RegisterTextField(fullName, { viewModel.fullName.value = it }, "Nombre completo")
                         Spacer(Modifier.height(16.dp))
-
-                        RegisterTextField(email, { email = it }, "Correo electrónico")
+                        RegisterTextField(email, { viewModel.email.value = it }, "Correo electrónico")
                         Spacer(Modifier.height(16.dp))
-
-                        RegisterTextField(password, { password = it }, "Contraseña", password = true)
+                        RegisterTextField(password, { viewModel.password.value = it }, "Contraseña", password = true)
                         Spacer(Modifier.height(16.dp))
-
-                        RegisterTextField(city, { city = it }, "Ciudad")
+                        RegisterTextField(city, { viewModel.city.value = it }, "Ciudad")
                         Spacer(Modifier.height(16.dp))
-
-                        RegisterTextField(interest, { interest = it }, "Intereses (Donar, Voluntariado...)")
+                        RegisterTextField(interest, { viewModel.interest.value = it }, "Intereses (Donar, Voluntariado...)")
                     }
                 }
 
                 Spacer(Modifier.height(32.dp))
 
                 Button(
-                    onClick = { onRegister(email, password) },   // ✅ conecta con la lógica de repo
+                    onClick = onRegister,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp)
@@ -117,7 +137,7 @@ fun RegisterScreen(
 
                 Spacer(Modifier.height(20.dp))
 
-                TextButton(onClick = { onGoToLogin() }) {   // ✅ vuelve al login
+                TextButton(onClick = onGoToLogin) {
                     Text(
                         "¿Ya tienes cuenta? Inicia sesión",
                         color = TealDark,
@@ -140,9 +160,7 @@ private fun RegisterTextField(
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        label = {
-            Text(label, color = DeepBlue, fontSize = 14.sp)
-        },
+        label = { Text(label, color = DeepBlue, fontSize = 14.sp) },
         singleLine = true,
         visualTransformation = if (password) PasswordVisualTransformation() else VisualTransformation.None,
         modifier = Modifier.fillMaxWidth(),
