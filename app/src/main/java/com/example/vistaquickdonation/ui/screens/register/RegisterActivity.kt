@@ -27,10 +27,8 @@ class RegisterActivity : ComponentActivity() {
                     onRegister = {
                         val validationError = viewModel.validateInputs()
                         if (validationError != null) {
-                            // Mostrar mensaje de error específico
                             viewModel.showToast(this, validationError)
                         } else {
-                            // Si todo está correcto, intentar registro
                             lifecycleScope.launch {
                                 val ok = viewModel.registerUser()
                                 if (ok) {
