@@ -64,4 +64,3 @@ fun MapFilters(viewModel: DonationMapViewModel) {
         }
     }
 }
-

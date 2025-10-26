@@ -6,6 +6,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -14,6 +15,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
+import com.example.vistaquickdonation.ui.theme.DeepBlue
 import com.example.vistaquickdonation.ui.theme.White
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,26 +38,50 @@ fun FilterDropdown(
             value = value,
             onValueChange = {},
             readOnly = true,
-            label = { Text(label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+            label = {
+                Text(
+                    label,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    color = DeepBlue
+                )
+            },
             modifier = Modifier
                 .menuAnchor()
                 .background(White),
             maxLines = 1,
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
-            colors = ExposedDropdownMenuDefaults.textFieldColors()
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = DeepBlue,
+                unfocusedBorderColor = DeepBlue,
+                focusedLabelColor = DeepBlue,
+                unfocusedLabelColor = DeepBlue,
+                focusedTextColor = DeepBlue,
+                unfocusedTextColor = DeepBlue,
+                cursorColor = DeepBlue
+            )
         )
 
         ExposedDropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false }
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.background(White) // 🔹 fuerza fondo blanco incluso en modo oscuro
         ) {
             items.forEach { option ->
                 DropdownMenuItem(
-                    text = { Text(option, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                    text = {
+                        Text(
+                            option,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            color = DeepBlue // 🔹 texto siempre oscuro
+                        )
+                    },
                     onClick = {
                         onChanged(option)
                         expanded = false
-                    }
+                    },
+                    modifier = Modifier.background(White) // 🔹 asegura que el fondo no cambie
                 )
             }
         }

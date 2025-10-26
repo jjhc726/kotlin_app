@@ -29,6 +29,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
+import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -44,6 +45,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -98,62 +100,93 @@ fun HomePageScreen() {
 
     fun go(target: Class<*>) = context.startActivity(Intent(context, target))
 
+    val drawerTextColor = Color(0xFF003137)
+    val drawerBgColor = Color.White
+
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
-            ModalDrawerSheet(drawerContainerColor = White, drawerTonalElevation = 4.dp) {
+            ModalDrawerSheet(
+                drawerContainerColor = drawerBgColor,
+                drawerTonalElevation = 4.dp
+            ) {
                 Spacer(Modifier.height(8.dp))
                 Text(
                     "Menu",
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                     style = MaterialTheme.typography.labelLarge,
-                    color = DeepBlue
+                    color = drawerTextColor
                 )
+
                 NavigationDrawerItem(
-                    label = { Text("Open Interactive Map") },
+                    label = { Text("Open Interactive Map", color = drawerTextColor) },
                     selected = false,
                     onClick = {
                         logDonationPreference("interactiveMap")
                         scope.launch { drawerState.close() }
                         go(InteractiveMapActivity::class.java)
-                    }
+                    },
+                    colors = NavigationDrawerItemDefaults.colors(
+                        unselectedContainerColor = drawerBgColor,
+                        selectedContainerColor = drawerBgColor,
+                        selectedTextColor = drawerTextColor,
+                        unselectedTextColor = drawerTextColor,
+                        selectedIconColor = drawerTextColor,
+                        unselectedIconColor = drawerTextColor
+                    )
                 )
                 NavigationDrawerItem(
-                    label = { Text("Go to Charity Profile") },
+                    label = { Text("Go to Charity Profile", color = drawerTextColor) },
                     selected = false,
                     onClick = {
                         scope.launch { drawerState.close() }
                         go(CharityProfileActivity::class.java)
-                    }
+                    },
+                    colors = NavigationDrawerItemDefaults.colors(
+                        selectedTextColor = drawerTextColor,
+                        unselectedTextColor = drawerTextColor
+                    )
                 )
                 NavigationDrawerItem(
-                    label = { Text("Go to Pick Up At Home") },
+                    label = { Text("Go to Pick Up At Home", color = drawerTextColor) },
                     selected = false,
                     onClick = {
                         logDonationPreference("pickupAtHome")
                         scope.launch { drawerState.close() }
                         go(PickUpAtHomeActivity::class.java)
-                    }
+                    },
+                    colors = NavigationDrawerItemDefaults.colors(
+                        selectedTextColor = drawerTextColor,
+                        unselectedTextColor = drawerTextColor
+                    )
                 )
 
                 Spacer(Modifier.height(12.dp))
 
                 NavigationDrawerItem(
-                    label = { Text("Sign Out") },
+                    label = { Text("Sign Out", color = drawerTextColor) },
                     selected = false,
                     onClick = {
                         scope.launch {
                             drawerState.close()
                             userRepo.signOut()
 
-                            val prefs = context.getSharedPreferences("session", Context.MODE_PRIVATE)
+                            val prefs =
+                                context.getSharedPreferences("session", Context.MODE_PRIVATE)
                             prefs.edit { clear() }
 
-                            val intent = Intent(context, LoginActivity::class.java)
-                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                            val intent =
+                                Intent(context, LoginActivity::class.java).apply {
+                                    flags =
+                                        Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                }
                             context.startActivity(intent)
                         }
-                    }
+                    },
+                    colors = NavigationDrawerItemDefaults.colors(
+                        selectedTextColor = drawerTextColor,
+                        unselectedTextColor = drawerTextColor
+                    )
                 )
             }
         }

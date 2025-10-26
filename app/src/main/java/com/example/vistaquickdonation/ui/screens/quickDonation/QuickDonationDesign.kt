@@ -28,6 +28,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.vistaquickdonation.ui.screens.home.HomePageActivity
+import com.example.vistaquickdonation.ui.theme.DeepBlue
+import com.example.vistaquickdonation.ui.theme.MediumBlue
+import com.example.vistaquickdonation.ui.theme.SoftBlue
 import com.example.vistaquickdonation.viewmodel.DonationViewModel
 
 @Composable
@@ -44,7 +47,7 @@ fun QuickDonationDesign(viewModel: DonationViewModel) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFAFC7CA))
+            .background(MediumBlue)
             .padding(20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -53,7 +56,7 @@ fun QuickDonationDesign(viewModel: DonationViewModel) {
         Text(
             text = "Donate Your Clothing",
             fontSize = 26.sp,
-            color = Color(0xFF3E6F75)
+            color = DeepBlue
         )
 
         Spacer(modifier = Modifier.height(20.dp))
@@ -62,7 +65,7 @@ fun QuickDonationDesign(viewModel: DonationViewModel) {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(150.dp)
-                .background(Color(0xFFBCEEF5), shape = RoundedCornerShape(4.dp)),
+                .background(SoftBlue, shape = RoundedCornerShape(4.dp)),
             contentAlignment = Alignment.Center
         ) {
             val capturedImage = viewModel.capturedImage.value
@@ -74,10 +77,16 @@ fun QuickDonationDesign(viewModel: DonationViewModel) {
                 )
             } else {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Item Image (Required)", color = Color(0xFF003137))
+                    Text("Item Image (Required)", color = DeepBlue)
                     Spacer(modifier = Modifier.height(8.dp))
-                    Button(onClick = { cameraLauncher.launch(null) }) {
-                        Text("Take Photo")
+                    Button(
+                        onClick = { cameraLauncher.launch(null) },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = DeepBlue,
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Text("Take Photo", color = Color.White)
                     }
                 }
             }
@@ -88,29 +97,68 @@ fun QuickDonationDesign(viewModel: DonationViewModel) {
         OutlinedTextField(
             value = viewModel.description.value,
             onValueChange = { viewModel.description.value = it },
-            label = { Text("Description (Required)") },
-            colors = OutlinedTextFieldDefaults.colors()
+            label = { Text("Description (Required)", color = DeepBlue) },
+            modifier = Modifier.fillMaxWidth(),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = DeepBlue,
+                unfocusedBorderColor = DeepBlue,
+                focusedLabelColor = DeepBlue,
+                unfocusedLabelColor = DeepBlue,
+                cursorColor = DeepBlue,
+                focusedTextColor = DeepBlue,
+                unfocusedTextColor = DeepBlue
+            )
         )
         Spacer(modifier = Modifier.height(12.dp))
 
         OutlinedTextField(
             value = viewModel.clothingType.value,
             onValueChange = { viewModel.clothingType.value = it },
-            label = { Text("Clothing Type (Required)") }
+            label = { Text("Clothing Type (Required)", color = DeepBlue) },
+            modifier = Modifier.fillMaxWidth(),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = DeepBlue,
+                unfocusedBorderColor = DeepBlue,
+                focusedLabelColor = DeepBlue,
+                unfocusedLabelColor = DeepBlue,
+                cursorColor = DeepBlue,
+                focusedTextColor = DeepBlue,
+                unfocusedTextColor = DeepBlue
+            )
         )
         Spacer(modifier = Modifier.height(12.dp))
 
         OutlinedTextField(
             value = viewModel.size.value,
             onValueChange = { viewModel.size.value = it },
-            label = { Text("Size (Required)") }
+            label = { Text("Size (Required)", color = DeepBlue) },
+            modifier = Modifier.fillMaxWidth(),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = DeepBlue,
+                unfocusedBorderColor = DeepBlue,
+                focusedLabelColor = DeepBlue,
+                unfocusedLabelColor = DeepBlue,
+                cursorColor = DeepBlue,
+                focusedTextColor = DeepBlue,
+                unfocusedTextColor = DeepBlue
+            )
         )
         Spacer(modifier = Modifier.height(12.dp))
 
         OutlinedTextField(
             value = viewModel.brand.value,
             onValueChange = { viewModel.brand.value = it },
-            label = { Text("Brand (Required)") }
+            label = { Text("Brand (Required)", color = DeepBlue) },
+            modifier = Modifier.fillMaxWidth(),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = DeepBlue,
+                unfocusedBorderColor = DeepBlue,
+                focusedLabelColor = DeepBlue,
+                unfocusedLabelColor = DeepBlue,
+                cursorColor = DeepBlue,
+                focusedTextColor = DeepBlue,
+                unfocusedTextColor = DeepBlue
+            )
         )
 
         Spacer(modifier = Modifier.height(40.dp))
@@ -131,15 +179,17 @@ fun QuickDonationDesign(viewModel: DonationViewModel) {
                 }
             },
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF003137),
-                contentColor = Color.White
+                containerColor = DeepBlue,
+                contentColor = Color.White,
+                disabledContainerColor = DeepBlue.copy(alpha = 0.5f),
+                disabledContentColor = Color.White
             ),
             shape = RoundedCornerShape(4.dp),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(50.dp)
         ) {
-            Text("Submit Donation")
+            Text("Submit Donation", color = Color.White, fontSize = 18.sp)
         }
     }
 }

@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -16,7 +15,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.example.vistaquickdonation.ui.theme.DeepBlue
 import com.example.vistaquickdonation.ui.theme.White
 import com.example.vistaquickdonation.viewmodel.DonationMapViewModel
 import com.google.android.gms.maps.model.CameraPosition
@@ -75,7 +76,7 @@ fun InteractiveMapContent(
                     MarkerInfoWindow(
                         state = markerState,
                         title = p.name,
-                        snippet = "${p.cause} • ${p.schedule}${if (p.accessible) " • Accessible" else "• Not Accessible"}",
+                        snippet = "${p.cause} • ${p.schedule}${if (p.accessible) " • Accessible" else " • Not Accessible"}",
                         onClick = {
                             viewModel.selectedMarkerState.value = markerState
                             false
@@ -86,12 +87,18 @@ fun InteractiveMapContent(
                             colors = CardDefaults.cardColors(containerColor = White)
                         ) {
                             Column(Modifier.padding(8.dp)) {
-                                if (isNearest) Text("⭐ Closest Point")
-                                Text(p.name, style = MaterialTheme.typography.titleMedium)
-                                Text("${p.cause} • ${p.schedule}", style = MaterialTheme.typography.bodySmall)
+                                if (isNearest) Text("⭐ Closest Point", color = DeepBlue)
+                                Text(
+                                    p.name,
+                                    color = DeepBlue,
+                                )
+                                Text(
+                                    "${p.cause} • ${p.schedule}",
+                                    color = Color.Black
+                                )
                                 Text(
                                     if (p.accessible) "Accessible" else "Not Accessible",
-                                    style = MaterialTheme.typography.bodySmall
+                                    color = if (p.accessible) DeepBlue else Color.Black
                                 )
                             }
                         }
@@ -100,7 +107,7 @@ fun InteractiveMapContent(
             }
         } else {
             Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                Text("Location permission is required to use the map.")
+                Text("Location permission is required to use the map.", color = DeepBlue)
             }
         }
 
