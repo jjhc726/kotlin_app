@@ -19,12 +19,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.vistaquickdonation.model.DonationItem
+import com.example.vistaquickdonation.data.model.DonationItem
 import com.example.vistaquickdonation.viewmodel.DonationViewModel
 import android.app.Activity
 import android.content.Intent
 import androidx.compose.ui.platform.LocalContext
-import com.example.vistaquickdonation.HomePageActivity
+import com.example.vistaquickdonation.ui.HomePageActivity
 
 @Composable
 fun QuickDonationDesign(viewModel: DonationViewModel) {

@@ -1,4 +1,4 @@
-package com.example.vistaquickdonation.ui.screens
+package com.example.vistaquickdonation.ui.screens.charity
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun CharityProfileDesign() {
+fun CharityProfileScreen() {
     val bgColor = Color(0xFFAFC7CA)
     val secondColor = Color(0xFF003137)
 

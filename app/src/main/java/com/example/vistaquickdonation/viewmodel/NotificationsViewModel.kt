@@ -2,8 +2,8 @@ package com.example.vistaquickdonation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.vistaquickdonation.model.DonationRepository
-import com.example.vistaquickdonation.model.DonationItem
+import com.example.vistaquickdonation.data.repository.DonationRepository
+import com.example.vistaquickdonation.data.model.DonationItem
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.ListenerRegistration
 import kotlinx.coroutines.flow.MutableStateFlow

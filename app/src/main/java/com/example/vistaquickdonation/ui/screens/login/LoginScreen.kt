@@ -1,4 +1,4 @@
-package com.example.vistaquickdonation.ui.login
+package com.example.vistaquickdonation.ui.screens.login
 
 import android.content.Intent
 import androidx.compose.foundation.background

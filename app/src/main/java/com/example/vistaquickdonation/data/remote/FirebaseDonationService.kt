@@ -1,16 +1,16 @@
-package com.example.vistaquickdonation.model
+package com.example.vistaquickdonation.data.remote
 
+import com.example.vistaquickdonation.data.model.DonationItem
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import kotlinx.coroutines.tasks.await
 
-class DonationRepository(
+class FirebaseDonationService(
     private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
 ) {
     private val donations = firestore.collection("donations")
-
 
     suspend fun uploadDonation(item: DonationItem, userEmail: String): Boolean {
         return try {
@@ -29,7 +29,6 @@ class DonationRepository(
             false
         }
     }
-
 
     fun listenRecentDonations(
         userEmail: String,
@@ -61,11 +60,8 @@ class DonationRepository(
             }
     }
 
-
-
     suspend fun getLastDonationTimestamp(userEmail: String): Timestamp? {
         val key = userEmail.trim().lowercase()
-
 
         val q = donations
             .whereEqualTo("userEmail", key)
@@ -76,5 +72,4 @@ class DonationRepository(
             .mapNotNull { it.getTimestamp("createdAt") }
             .maxByOrNull { it.toDate().time }
     }
-
 }

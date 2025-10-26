@@ -7,7 +7,7 @@ import androidx.annotation.RequiresPermission
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.AndroidViewModel
-import com.example.vistaquickdonation.model.DonationPoint
+import com.example.vistaquickdonation.data.model.DonationPoint
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.MarkerState
@@ -15,10 +15,8 @@ import kotlinx.coroutines.delay
 
 class DonationMapViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val context = getApplication<Application>().applicationContext
-    private val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
-
-    // Estados observables
+    private val fusedLocationClient =
+        LocationServices.getFusedLocationProviderClient(getApplication<Application>().applicationContext)
     val userLocation = mutableStateOf<LatLng?>(null)
     val hasLocationPermission = mutableStateOf(false)
     val cause = mutableStateOf("All")
@@ -31,10 +29,38 @@ class DonationMapViewModel(application: Application) : AndroidViewModel(applicat
 
     // Puntos de donación simulados
     private val points = listOf(
-        DonationPoint("p1", "Fundación Niñez Feliz", LatLng(4.651, -74.060), "Children", true, "Morning"),
-        DonationPoint("p2", "Abrigo para Todos", LatLng(4.730, -74.082), "Adults", false, "Afternoon"),
-        DonationPoint("p3", "Refugio Esperanza", LatLng(4.705, -74.100), "Emergency", true, "Night"),
-        DonationPoint("p4", "Ropero Comunitario", LatLng(4.745, -74.050), "Children", false, "Morning"),
+        DonationPoint(
+            "p1",
+            "Fundación Niñez Feliz",
+            LatLng(4.651, -74.060),
+            "Children",
+            true,
+            "Morning"
+        ),
+        DonationPoint(
+            "p2",
+            "Abrigo para Todos",
+            LatLng(4.730, -74.082),
+            "Adults",
+            false,
+            "Afternoon"
+        ),
+        DonationPoint(
+            "p3",
+            "Refugio Esperanza",
+            LatLng(4.705, -74.100),
+            "Emergency",
+            true,
+            "Night"
+        ),
+        DonationPoint(
+            "p4",
+            "Ropero Comunitario",
+            LatLng(4.745, -74.050),
+            "Children",
+            false,
+            "Morning"
+        ),
     )
 
     val visiblePoints = mutableStateOf(points)
@@ -42,9 +68,10 @@ class DonationMapViewModel(application: Application) : AndroidViewModel(applicat
     init {
         checkPermission()
     }
+
     fun checkPermission(): Boolean {
         val granted = ActivityCompat.checkSelfPermission(
-            context,
+            getApplication<Application>().applicationContext,
             Manifest.permission.ACCESS_FINE_LOCATION
         ) == PackageManager.PERMISSION_GRANTED
         hasLocationPermission.value = granted

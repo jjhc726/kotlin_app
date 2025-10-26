@@ -1,4 +1,4 @@
-package com.example.vistaquickdonation.model
+package com.example.vistaquickdonation.data.model
 
 import com.google.firebase.Timestamp
 

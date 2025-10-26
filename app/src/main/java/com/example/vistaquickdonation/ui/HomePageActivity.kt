@@ -1,5 +1,6 @@
-package com.example.vistaquickdonation
+package com.example.vistaquickdonation.ui
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -28,7 +29,12 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.material.icons.rounded.Checkroom
-
+import com.example.vistaquickdonation.ui.screens.charity.CharityProfileActivity
+import com.example.vistaquickdonation.ui.screens.interactiveMap.InteractiveMapActivity
+import com.example.vistaquickdonation.PickUpAtHomeActivity
+import com.example.vistaquickdonation.QuickDonationActivity
+import com.example.vistaquickdonation.ScheduleDonationActivity
+import com.example.vistaquickdonation.Secondary
 
 
 class HomePageActivity : ComponentActivity() {
@@ -53,7 +59,7 @@ fun HomePageScreen() {
 
 
     val sessionEmail = remember {
-        context.getSharedPreferences("session", android.content.Context.MODE_PRIVATE)
+        context.getSharedPreferences("session", Context.MODE_PRIVATE)
             .getString("email", null)
     }
 

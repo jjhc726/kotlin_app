@@ -7,7 +7,6 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
     <application
-        android:name=".App"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -22,7 +21,7 @@
             android:value="@string/google_maps_api_key"/>
 
         <service
-            android:name=".push.MyFirebaseMessagingService"
+            android:name=".notification.service.MyFirebaseMessagingService"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT"/>
@@ -32,9 +31,9 @@
             android:name="firebase_messaging_auto_init_enabled"
             android:value="true"/>
 
-        <activity android:name=".InteractiveMapActivity"/>
-        <activity android:name=".HomePageActivity"/>
-        <activity android:name=".CharityProfileActivity"/>
+        <activity android:name=".ui.screens.interactiveMap.InteractiveMapActivity"/>
+        <activity android:name=".ui.HomePageActivity"/>
+        <activity android:name=".ui.screens.charity.CharityProfileActivity"/>
         <activity android:name=".PickUpAtHomeActivity"/>
         <activity android:name=".ScheduleDonationActivity"/>
         <activity android:name=".QuickDonationActivity"/>
@@ -50,7 +49,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".LoginActivity"
+            android:name=".ui.screens.login.LoginActivity"
             android:exported="true"
             android:theme="@style/Theme.VistaQuickDonation">
 

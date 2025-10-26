@@ -1,4 +1,4 @@
-package com.example.vistaquickdonation.push
+package com.example.vistaquickdonation.notification.util
 
 import android.Manifest
 import android.app.NotificationChannel
@@ -11,27 +11,17 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.example.vistaquickdonation.R
-import com.google.firebase.messaging.FirebaseMessagingService
-import com.google.firebase.messaging.RemoteMessage
 
-class MyFirebaseMessagingService : FirebaseMessagingService() {
+object NotificationHelper {
 
-    companion object {
-        private const val CHANNEL_ID = "recyclothes_push"
-        private const val CHANNEL_NAME = "Recyclothes notifications"
-        private const val CHANNEL_DESC = "General updates and reminders"
-    }
+    private const val CHANNEL_ID = "recyclothes_push"
+    private const val CHANNEL_NAME = "Recyclothes notifications"
+    private const val CHANNEL_DESC = "General updates and reminders"
 
-    override fun onMessageReceived(message: RemoteMessage) {
-        super.onMessageReceived(message)
+    fun showNotification(context: Context, title: String, body: String) {
+        createChannelIfNeeded(context)
 
-
-        createChannelIfNeeded()
-
-        val title = message.notification?.title ?: message.data["title"] ?: "Recyclothes"
-        val body  = message.notification?.body  ?: message.data["body"]  ?: "You have a new message"
-
-        val notif = NotificationCompat.Builder(this, CHANNEL_ID)
+        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle(title)
             .setContentText(body)
@@ -40,27 +30,26 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             .setAutoCancel(true)
             .build()
 
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             val granted = ContextCompat.checkSelfPermission(
-                this, Manifest.permission.POST_NOTIFICATIONS
+                context, Manifest.permission.POST_NOTIFICATIONS
             ) == PackageManager.PERMISSION_GRANTED
 
             if (!granted) {
-                Log.w("FCM", "POST_NOTIFICATIONS not granted. Skipping local notification.")
+                Log.w("NotificationHelper", "Permission not granted to show notifications")
                 return
             }
         }
 
-        NotificationManagerCompat.from(this).notify(
+        NotificationManagerCompat.from(context).notify(
             (System.currentTimeMillis() % Int.MAX_VALUE).toInt(),
-            notif
+            notification
         )
     }
 
-    private fun createChannelIfNeeded() {
+    private fun createChannelIfNeeded(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val mgr = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val mgr = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             val channel = NotificationChannel(
                 CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_HIGH
             ).apply { description = CHANNEL_DESC }
