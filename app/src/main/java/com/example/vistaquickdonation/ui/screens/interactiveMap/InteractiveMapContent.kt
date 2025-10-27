@@ -52,15 +52,30 @@ fun InteractiveMapContent(
     val markersCreatedCount = remember { mutableIntStateOf(0) }
     var isMapLoaded by remember { mutableStateOf(false) }
 
-    LaunchedEffect(userLocation, isMapLoaded, markersCreatedCount.intValue) {
+    LaunchedEffect(userLocation, isMapLoaded, markersCreatedCount.intValue, visiblePoints, currentnearestPoint?.id) {
         if (!isMapLoaded) return@LaunchedEffect
         if (visiblePoints.isEmpty()) return@LaunchedEffect
         if (markersCreatedCount.intValue < visiblePoints.size) return@LaunchedEffect
 
         delay(100)
 
-        viewModel.findAndShowClosestPoint(markerStates)
+        viewModel.findAndShowClosestPoint()
+
+        val nearest = viewModel.currentnearestPoint.value ?: return@LaunchedEffect
+
+        var attempts = 0
+        val maxAttempts = 10
+        while (!markerStates.containsKey(nearest.id) && attempts < maxAttempts) {
+            delay(50)
+            attempts++
+        }
+
+        markerStates[nearest.id]?.let { ms ->
+            ms.showInfoWindow()
+            viewModel.selectedMarkerState.value = ms
+        }
     }
+
 
     LaunchedEffect(selectedMarkerState) {
         selectedMarkerState?.showInfoWindow()
@@ -78,7 +93,7 @@ fun InteractiveMapContent(
                 visiblePoints.forEach { p ->
                     val markerState = remember(p.id) { MarkerState(position = p.position) }
                     markerStates[p.id] = markerState
-                    val isNearest = p == currentnearestPoint
+                    val isNearest = currentnearestPoint?.id == p.id
 
                     MarkerInfoWindow(
                         state = markerState,

@@ -88,11 +88,6 @@ class DonationMapViewModel(
         }
     }
 
-    fun updateFilters() {
-        visiblePoints.value = applyFilters(allPoints.value)
-
-    }
-
     private fun applyFilters(list: List<DonationPoint>): List<DonationPoint> {
         return list.filter { p ->
             val accessMatches = when (access.value) {
@@ -108,22 +103,25 @@ class DonationMapViewModel(
         }
     }
 
-    suspend fun findAndShowClosestPoint(markerStates: Map<String, MarkerState>) {
-        if (visiblePoints.value.isNotEmpty() && userLocation.value != null) {
-            val nearestPoint = visiblePoints.value.minByOrNull { p ->
-                val userLoc = userLocation.value!!
-                val dx = userLoc.latitude - p.position.latitude
-                val dy = userLoc.longitude - p.position.longitude
-                dx * dx + dy * dy
-            }
-            currentnearestPoint.value = nearestPoint
-
-            delay(200)
-
-            nearestPoint?.let {
-                selectedMarkerState.value = markerStates[it.id]
-                markerStates[it.id]?.showInfoWindow()
-            }
+    fun findAndShowClosestPoint() {
+        val userLoc = userLocation.value
+        val points = visiblePoints.value
+        if (userLoc == null || points.isEmpty()) {
+            currentnearestPoint.value = null
+            return
         }
+
+        val nearest = points.minByOrNull { p ->
+            val dx = userLoc.latitude - p.position.latitude
+            val dy = userLoc.longitude - p.position.longitude
+            dx * dx + dy * dy
+        }
+        currentnearestPoint.value = nearest
+    }
+
+    fun updateFilters() {
+        visiblePoints.value = applyFilters(allPoints.value)
+        // recalculamos inmediatamente cuando cambian los filtros
+        findAndShowClosestPoint()
     }
 }
