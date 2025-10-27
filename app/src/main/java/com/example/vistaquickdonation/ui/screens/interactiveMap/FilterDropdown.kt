@@ -69,7 +69,7 @@ fun FilterDropdown(
         ExposedDropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
-            modifier = Modifier.background(White) // 🔹 fuerza fondo blanco incluso en modo oscuro
+            modifier = Modifier.background(White)
         ) {
             items.forEach { option ->
                 DropdownMenuItem(
@@ -78,14 +78,14 @@ fun FilterDropdown(
                             option,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
-                            color = DeepBlue // 🔹 texto siempre oscuro
+                            color = DeepBlue
                         )
                     },
                     onClick = {
                         onChanged(option)
                         expanded = false
                     },
-                    modifier = Modifier.background(White) // 🔹 asegura que el fondo no cambie
+                    modifier = Modifier.background(White)
                 )
             }
         }

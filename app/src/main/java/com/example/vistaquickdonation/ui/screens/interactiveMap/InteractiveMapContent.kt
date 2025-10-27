@@ -9,7 +9,9 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -46,12 +48,17 @@ fun InteractiveMapContent(
     val selectedMarkerState by viewModel.selectedMarkerState
     val currentnearestPoint by viewModel.currentnearestPoint
 
-    val markerStates = remember { mutableMapOf<String, MarkerState>() }
+    val markerStates = remember(visiblePoints) { mutableMapOf<String, MarkerState>() }
+    val markersCreatedCount = remember { mutableIntStateOf(0) }
     var isMapLoaded by remember { mutableStateOf(false) }
 
-    LaunchedEffect(userLocation, visiblePoints, isMapLoaded) {
+    LaunchedEffect(userLocation, isMapLoaded, markersCreatedCount.intValue) {
         if (!isMapLoaded) return@LaunchedEffect
-        delay(200)
+        if (visiblePoints.isEmpty()) return@LaunchedEffect
+        if (markersCreatedCount.intValue < visiblePoints.size) return@LaunchedEffect
+
+        delay(100)
+
         viewModel.findAndShowClosestPoint(markerStates)
     }
 
@@ -103,6 +110,9 @@ fun InteractiveMapContent(
                             }
                         }
                     }
+                }
+                SideEffect {
+                    markersCreatedCount.intValue = markerStates.size
                 }
             }
         } else {

@@ -8,65 +8,44 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.AndroidViewModel
 import com.example.vistaquickdonation.data.model.DonationPoint
+import com.example.vistaquickdonation.data.repository.CharitiesRepository
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.MarkerState
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import androidx.lifecycle.viewModelScope
 
-class DonationMapViewModel(application: Application) : AndroidViewModel(application) {
+class DonationMapViewModel(
+    application: Application,
+) : AndroidViewModel(application) {
 
+    private val repository = CharitiesRepository()
     private val fusedLocationClient =
         LocationServices.getFusedLocationProviderClient(getApplication<Application>().applicationContext)
+
     val userLocation = mutableStateOf<LatLng?>(null)
     val hasLocationPermission = mutableStateOf(false)
+
     val cause = mutableStateOf("All")
     val access = mutableStateOf("All")
     val schedule = mutableStateOf("All")
 
     val currentnearestPoint = mutableStateOf<DonationPoint?>(null)
-
     val selectedMarkerState = mutableStateOf<MarkerState?>(null)
 
-    // Puntos de donación simulados
-    private val points = listOf(
-        DonationPoint(
-            "p1",
-            "Fundación Niñez Feliz",
-            LatLng(4.651, -74.060),
-            "Children",
-            true,
-            "Morning"
-        ),
-        DonationPoint(
-            "p2",
-            "Abrigo para Todos",
-            LatLng(4.730, -74.082),
-            "Adults",
-            false,
-            "Afternoon"
-        ),
-        DonationPoint(
-            "p3",
-            "Refugio Esperanza",
-            LatLng(4.705, -74.100),
-            "Emergency",
-            true,
-            "Night"
-        ),
-        DonationPoint(
-            "p4",
-            "Ropero Comunitario",
-            LatLng(4.745, -74.050),
-            "Children",
-            false,
-            "Morning"
-        ),
-    )
+    // estados de UI
+    private val allPoints = mutableStateOf<List<DonationPoint>>(emptyList())
+    val visiblePoints = mutableStateOf<List<DonationPoint>>(emptyList())
+    val isLoading = mutableStateOf(false)
+    val errorMessage = mutableStateOf<String?>(null)
 
-    val visiblePoints = mutableStateOf(points)
 
     init {
         checkPermission()
+        refreshPoints()
     }
 
     fun checkPermission(): Boolean {
@@ -88,10 +67,43 @@ class DonationMapViewModel(application: Application) : AndroidViewModel(applicat
         }
     }
 
+    fun refreshPoints() {
+        viewModelScope.launch {
+            isLoading.value = true
+            errorMessage.value = null
+
+            try {
+                val points = withContext(Dispatchers.IO) {
+                    repository.getAllDonationPoints()
+                }
+                allPoints.value = points
+                updateFilters()
+            } catch (e: Exception) {
+                e.printStackTrace()
+                errorMessage.value = e.message ?: "Error loading donation points"
+                visiblePoints.value = emptyList()
+            } finally {
+                isLoading.value = false
+            }
+        }
+    }
+
     fun updateFilters() {
-        visiblePoints.value = points.filter { p ->
+        visiblePoints.value = applyFilters(allPoints.value)
+
+    }
+
+    private fun applyFilters(list: List<DonationPoint>): List<DonationPoint> {
+        return list.filter { p ->
+            val accessMatches = when (access.value) {
+                "All" -> true
+                "Accessible" -> p.accessible
+                "Not accessible" -> !p.accessible
+                else -> true
+            }
+
             (cause.value == "All" || p.cause == cause.value) &&
-                    (access.value == "All" || (access.value == "Accessible") == p.accessible) &&
+                    accessMatches &&
                     (schedule.value == "All" || p.schedule == schedule.value)
         }
     }
@@ -110,6 +122,7 @@ class DonationMapViewModel(application: Application) : AndroidViewModel(applicat
 
             nearestPoint?.let {
                 selectedMarkerState.value = markerStates[it.id]
+                markerStates[it.id]?.showInfoWindow()
             }
         }
     }
