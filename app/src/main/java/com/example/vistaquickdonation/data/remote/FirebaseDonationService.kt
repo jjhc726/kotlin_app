@@ -20,6 +20,7 @@ class FirebaseDonationService(
                 "clothingType" to item.clothingType,
                 "size" to item.size,
                 "brand" to item.brand,
+                "tags" to item.tags,
                 "userEmail" to userEmail.trim().lowercase(),
                 "createdAt" to FieldValue.serverTimestamp()
             )

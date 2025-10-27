@@ -7,6 +7,7 @@ data class DonationItem(
     val clothingType: String = "",
     val size: String = "",
     val brand: String = "",
+    val tags: List<String> = emptyList(),
     val userEmail: String = "",
     val createdAt: Timestamp? = null
 )

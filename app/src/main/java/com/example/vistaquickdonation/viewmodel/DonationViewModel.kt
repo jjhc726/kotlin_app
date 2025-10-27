@@ -22,40 +22,98 @@ data class TopDonor(
 class DonationViewModel(app: Application) : AndroidViewModel(app) {
 
     private val repository = DonationRepository()
+    private val userRepo = UserRepository()
 
     val capturedImage = mutableStateOf<Bitmap?>(null)
     val description = mutableStateOf("")
     val clothingType = mutableStateOf("")
     val size = mutableStateOf("")
     val brand = mutableStateOf("")
+    val selectedTags = mutableStateOf<List<String>>(emptyList())
+
+    val descriptionError = mutableStateOf<String?>(null)
+    val clothingTypeError = mutableStateOf<String?>(null)
+    val sizeError = mutableStateOf<String?>(null)
+    val brandError = mutableStateOf<String?>(null)
+    val imageError = mutableStateOf<String?>(null)
 
     private val _topDonors = MutableStateFlow<List<TopDonor>>(emptyList())
     val topDonors: StateFlow<List<TopDonor>> = _topDonors.asStateFlow()
 
     private var recentListener: ListenerRegistration? = null
 
-    private val userRepo = UserRepository()
+    val availableTags = listOf(
+        "Women", "Men", "Kids", "Winter", "Summer",
+        "Formal", "Casual", "Sport", "Party", "Coat"
+    )
 
     private fun sessionEmail(): String? = userRepo.currentEmail()
-    fun uploadDonation(onResult: (Boolean) -> Unit) {
-        val donation = DonationItem(
-            description = description.value,
-            clothingType = clothingType.value,
-            size = size.value,
-            brand = brand.value
-        )
-        makeDonation(donation, onResult)
+
+    fun toggleTag(tag: String) {
+        selectedTags.value = if (selectedTags.value.contains(tag)) {
+            selectedTags.value - tag
+        } else {
+            selectedTags.value + tag
+        }
     }
 
-    private fun makeDonation(item: DonationItem, onResult: (Boolean) -> Unit) {
+    private fun validateInputs(): String? {
+        descriptionError.value = null
+        clothingTypeError.value = null
+        sizeError.value = null
+        brandError.value = null
+        imageError.value = null
+
+        if (capturedImage.value == null) {
+            imageError.value = "You must capture an image"
+            return imageError.value
+        }
+
+        descriptionError.value = when {
+            description.value.isBlank() -> "Description is required"
+            description.value.length < 10 -> "Must be at least 10 characters"
+            description.value.length > 200 -> "Too long (max 200 characters)"
+            else -> null
+        }
+        if (descriptionError.value != null) return descriptionError.value
+
+        clothingTypeError.value =
+            if (clothingType.value.isBlank()) "Select a clothing type" else null
+        if (clothingTypeError.value != null) return clothingTypeError.value
+
+        sizeError.value = if (size.value.isBlank()) "Size is required" else null
+        if (sizeError.value != null) return sizeError.value
+
+        brandError.value = if (brand.value.isBlank()) "Brand is required" else null
+        if (brandError.value != null) return brandError.value
+
+        return null
+    }
+
+    fun uploadDonation(onResult: (Boolean, String) -> Unit) {
+        val firstError = validateInputs()
+        if (firstError != null) {
+            onResult(false, firstError)
+            return
+        }
+
+        val donation = DonationItem(
+            description = description.value.trim(),
+            clothingType = clothingType.value,
+            size = size.value.trim(),
+            brand = brand.value.trim(),
+            tags = selectedTags.value
+        )
+
         viewModelScope.launch {
             val email = sessionEmail()
             if (email.isNullOrEmpty()) {
-                onResult(false)
+                onResult(false, "User session not found.")
                 return@launch
             }
-            val ok = repository.uploadDonation(item, userEmail = email)
-            onResult(ok)
+
+            val ok = repository.uploadDonation(donation, userEmail = email)
+            onResult(ok, if (ok) "Donation stored successfully!" else "Error uploading donation.")
         }
     }
 
@@ -71,7 +129,6 @@ class DonationViewModel(app: Application) : AndroidViewModel(app) {
 
     override fun onCleared() {
         recentListener?.remove()
-        recentListener = null
         super.onCleared()
     }
 }
