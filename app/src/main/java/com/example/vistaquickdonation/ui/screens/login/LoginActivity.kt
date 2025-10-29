@@ -7,12 +7,11 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import com.example.vistaquickdonation.ui.screens.home.HomePageActivity
+import com.example.vistaquickdonation.ui.screens.main.MainNavigationActivity
 import com.example.vistaquickdonation.ui.theme.VistaQuickDonationTheme
 import com.example.vistaquickdonation.utils.BiometricHelper
 import com.example.vistaquickdonation.viewmodel.LoginViewModel
 import kotlinx.coroutines.launch
-import kotlin.jvm.java
 
 class LoginActivity : AppCompatActivity() {
 
@@ -41,7 +40,7 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun goToHome() {
-        startActivity(Intent(this, HomePageActivity::class.java))
+        startActivity(Intent(this, MainNavigationActivity::class.java))
         finish()
     }
 }

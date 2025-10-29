@@ -2,10 +2,8 @@ package com.example.vistaquickdonation.ui.screens.pickUpAtHome
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -25,89 +22,53 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun PickUpAtHomeDesign() {
+fun PickUpAtHomeScreen() {
     val bgColor = Color(0xFFE6F0F2)
     val primaryColor = Color(0xFF003137)
     val accentColor = Color(0xFF0FA3B1)
 
-    Scaffold(
-        bottomBar = {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(70.dp)
-                    .background(Color.White)
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("Home", color = primaryColor, fontWeight = FontWeight.Medium)
-                Text("Campaigns", color = primaryColor.copy(alpha = 0.7f))
-                Text("Profile", color = primaryColor.copy(alpha = 0.7f))
-                Text("Settings", color = primaryColor.copy(alpha = 0.7f))
-            }
-        }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(bgColor)
-                .padding(paddingValues)
-                .padding(horizontal = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // Barra superior
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(bgColor)
+            .padding(horizontal = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Spacer(Modifier.height(32.dp))
+
+        // Inputs
+        @Composable
+        fun InputCard(label: String) {
+            Text(label, fontSize = 18.sp, fontWeight = FontWeight.Medium, color = primaryColor)
+            Spacer(Modifier.height(8.dp))
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(90.dp)
-                    .background(primaryColor),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "PickUp At Home",
-                    fontSize = 26.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
-            }
-
-            Spacer(Modifier.height(32.dp))
-
-            // Inputs
-            @Composable
-            fun InputCard(label: String) {
-                Text(label, fontSize = 18.sp, fontWeight = FontWeight.Medium, color = primaryColor)
-                Spacer(Modifier.height(8.dp))
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp)
-                        .background(Color.White, shape = RoundedCornerShape(12.dp))
-                        .border(1.dp, accentColor.copy(alpha = 0.4f), shape = RoundedCornerShape(12.dp))
-                        .padding(start = 16.dp),
-                )
-                Spacer(Modifier.height(24.dp))
-            }
-
-            InputCard("Choose your location")
-            InputCard("Select a Date")
-            InputCard("Select a Time")
-
-            Spacer(Modifier.height(16.dp))
-
-            Button(
-                onClick = { /* acción */ },
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
-            ) {
-                Text("Confirm", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-            }
-
+                    .height(50.dp)
+                    .background(Color.White, shape = RoundedCornerShape(12.dp))
+                    .border(1.dp, accentColor.copy(alpha = 0.4f), shape = RoundedCornerShape(12.dp))
+                    .padding(start = 16.dp),
+            )
             Spacer(Modifier.height(24.dp))
         }
+
+        InputCard("Choose your location")
+        InputCard("Select a Date")
+        InputCard("Select a Time")
+
+        Spacer(Modifier.height(16.dp))
+
+        Button(
+            onClick = { /* acción */ },
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
+        ) {
+            Text("Confirm", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        }
+
+        Spacer(Modifier.height(24.dp))
     }
 }

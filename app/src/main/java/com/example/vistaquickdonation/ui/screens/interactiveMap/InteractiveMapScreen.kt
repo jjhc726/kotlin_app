@@ -4,9 +4,6 @@ import android.Manifest
 import android.annotation.SuppressLint
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -15,7 +12,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.vistaquickdonation.viewmodel.DonationMapViewModel
 
 @SuppressLint("MissingPermission")
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InteractiveMapScreen(viewModel: DonationMapViewModel = viewModel()) {
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -37,13 +33,9 @@ fun InteractiveMapScreen(viewModel: DonationMapViewModel = viewModel()) {
 
     val hasPermission by viewModel.hasLocationPermission
 
-    Scaffold(
-        topBar = { InteractiveMapTopBar() }
-    ) { innerPadding ->
-        InteractiveMapContent(
-            viewModel = viewModel,
-            hasPermission = hasPermission,
-            modifier = Modifier.padding(innerPadding)
-        )
-    }
+    InteractiveMapContent(
+        viewModel = viewModel,
+        hasPermission = hasPermission,
+        modifier = Modifier
+    )
 }
