@@ -39,6 +39,7 @@
         <activity android:name=".ui.screens.quickDonation.QuickDonationActivity"/>
         <activity android:name=".ui.screens.register.RegisterActivity"/>
         <activity android:name=".ui.screens.main.MainNavigationActivity"/>
+        <activity android:name=".ui.screens.seasonalCampaigns.CampaignDetailActivity"/>
 
         <activity
             android:name=".MainActivity"
