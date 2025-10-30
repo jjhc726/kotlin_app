@@ -33,13 +33,11 @@
 
         <activity android:name=".ui.screens.interactiveMap.InteractiveMapActivity"/>
         <activity android:name=".ui.screens.home.HomePageActivity"/>
-        <activity android:name=".ui.screens.charity.CharityProfileActivity"/>
         <activity android:name=".ui.screens.pickUpAtHome.PickUpAtHomeActivity"/>
         <activity android:name=".ui.screens.scheduledonation.ScheduleDonationActivity"/>
         <activity android:name=".ui.screens.quickDonation.QuickDonationActivity"/>
         <activity android:name=".ui.screens.register.RegisterActivity"/>
         <activity android:name=".ui.screens.main.MainNavigationActivity"/>
-        <activity android:name=".ui.screens.seasonalCampaigns.CampaignDetailActivity"/>
 
         <activity
             android:name=".MainActivity"

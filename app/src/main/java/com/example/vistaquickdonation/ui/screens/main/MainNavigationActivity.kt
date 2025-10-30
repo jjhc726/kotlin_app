@@ -42,6 +42,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.vistaquickdonation.data.repository.UserRepository
 import com.example.vistaquickdonation.ui.components.BottomNavigationBar
 import com.example.vistaquickdonation.ui.navigation.BottomNavItem
+import com.example.vistaquickdonation.ui.screens.charity.CharityListScreen
 import com.example.vistaquickdonation.ui.screens.charity.CharityProfileScreen
 import com.example.vistaquickdonation.ui.screens.home.HomePageScreen
 import com.example.vistaquickdonation.ui.screens.interactiveMap.InteractiveMapScreen
@@ -52,7 +53,9 @@ import com.example.vistaquickdonation.ui.theme.DeepBlue
 import com.example.vistaquickdonation.ui.theme.MediumBlue
 import com.example.vistaquickdonation.ui.theme.TealDark
 import com.example.vistaquickdonation.ui.theme.VistaQuickDonationTheme
+import com.example.vistaquickdonation.viewmodel.CharityViewModel
 import com.example.vistaquickdonation.viewmodel.NotificationsViewModel
+import com.example.vistaquickdonation.viewmodel.SeasonalCampaignsViewModel
 
 class MainNavigationActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -72,6 +75,8 @@ fun MainNavigationScreen() {
     val userRepo = remember { UserRepository() }
     val notificationsVM = viewModel<NotificationsViewModel>()
     val notifications by notificationsVM.notifications.collectAsState()
+    val charityVM = viewModel<CharityViewModel>()
+    val seasonalVM = viewModel<SeasonalCampaignsViewModel>()
 
     var selectedItem by remember { mutableStateOf<BottomNavItem>(BottomNavItem.Home) }
     var expanded by remember { mutableStateOf(false) }
@@ -85,7 +90,6 @@ fun MainNavigationScreen() {
                     containerColor = TealDark,
                     titleContentColor = Color.White
                 ),
-                // 👤 Ícono de cuenta solo en Home (navigationIcon)
                 navigationIcon = {
                     if (selectedItem == BottomNavItem.Home) {
                         Box {
@@ -117,7 +121,6 @@ fun MainNavigationScreen() {
                         }
                     }
                 },
-                // 🩵 Título centrado
                 title = {
                     Box(
                         modifier = Modifier.fillMaxWidth(),
@@ -137,7 +140,6 @@ fun MainNavigationScreen() {
                         )
                     }
                 },
-                // 🔔 Notificaciones solo en Home
                 actions = {
                     if (selectedItem == BottomNavItem.Home) {
                         IconButton(onClick = { showNotifications = true }) {
@@ -167,12 +169,24 @@ fun MainNavigationScreen() {
             when (selectedItem) {
                 BottomNavItem.Home -> HomePageScreen()
                 BottomNavItem.Map -> InteractiveMapScreen()
-                BottomNavItem.Charities -> CharityProfileScreen()
-                BottomNavItem.SeasonalCampaigns -> SeasonalCampaignsScreen()
+                BottomNavItem.Charities -> {
+                    val selectedCharity = charityVM.selectedCharity
+                    if (selectedCharity == null) {
+                        CharityListScreen(
+                            charities = charityVM.charities,
+                            onCharityClick = { charityVM.selectCharity(it) }
+                        )
+                    } else {
+                        CharityProfileScreen(
+                            charity = selectedCharity,
+                            onBackClick = { charityVM.goBack() }
+                        )
+                    }
+                }
+                BottomNavItem.SeasonalCampaigns -> SeasonalCampaignsScreen(viewModel = seasonalVM)
                 BottomNavItem.PickUp -> PickUpAtHomeScreen()
             }
 
-            // 📬 ModalBottomSheet de notificaciones
             if (showNotifications) {
                 ModalBottomSheet(
                     onDismissRequest = { showNotifications = false },

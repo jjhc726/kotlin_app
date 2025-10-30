@@ -8,8 +8,8 @@ class InteractionService(
 ) {
     private val collectionName = "interactions"
 
-    suspend fun incrementInteractions() {
-        val docRef = firestore.collection(collectionName).document("global")
+    suspend fun incrementCampaignInteraction() {
+        val docRef = firestore.collection(collectionName).document("campaignsInteractions")
         firestore.runTransaction { transaction ->
             val snapshot = transaction.get(docRef)
             val currentCount = snapshot.getLong("count") ?: 0L
@@ -17,8 +17,12 @@ class InteractionService(
         }.await()
     }
 
-    suspend fun getInteractions(): Long {
-        val doc = firestore.collection(collectionName).document("global").get().await()
-        return doc.getLong("count") ?: 0L
+    suspend fun incrementCharityInteraction() {
+        val docRef = firestore.collection(collectionName).document("charitiesInteractions")
+        firestore.runTransaction { transaction ->
+            val snapshot = transaction.get(docRef)
+            val currentCount = snapshot.getLong("count") ?: 0L
+            transaction.set(docRef, mapOf("count" to currentCount + 1))
+        }.await()
     }
 }

@@ -12,14 +12,12 @@ class SeasonalCampaignsViewModel : ViewModel() {
 
     private val _campaigns = MutableStateFlow<List<SeasonalCampaign>>(emptyList())
     val campaigns: StateFlow<List<SeasonalCampaign>> = _campaigns
-
-    private val _totalInteractions = MutableStateFlow<Long>(0)
-
     private val interactionRepository = InteractionRepository()
+    private val _selectedCampaign = MutableStateFlow<SeasonalCampaign?>(null)
+    val selectedCampaign: StateFlow<SeasonalCampaign?> = _selectedCampaign
 
     init {
         loadCampaigns()
-        loadTotalInteractions()
     }
 
     private fun loadCampaigns() {
@@ -96,19 +94,16 @@ class SeasonalCampaignsViewModel : ViewModel() {
         _campaigns.value = campaigns
     }
 
-    fun getCampaignById(id: Int): SeasonalCampaign? {
-        return _campaigns.value.find { it.id == id }
-    }
-
     fun addInteraction() {
         viewModelScope.launch {
-            interactionRepository.addInteraction()
-            loadTotalInteractions()
+            interactionRepository.addCampaignInteraction()
         }
     }
-    private fun loadTotalInteractions() {
-        viewModelScope.launch {
-            _totalInteractions.value = interactionRepository.fetchTotalInteractions()
-        }
+    fun selectCampaign(campaign: SeasonalCampaign) {
+        _selectedCampaign.value = campaign
+    }
+
+    fun goBack() {
+        _selectedCampaign.value = null
     }
 }
