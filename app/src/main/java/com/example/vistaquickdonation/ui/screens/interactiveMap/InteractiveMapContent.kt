@@ -1,21 +1,36 @@
 package com.example.vistaquickdonation.ui.screens.interactiveMap
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -24,6 +39,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.vistaquickdonation.ui.theme.DeepBlue
 import com.example.vistaquickdonation.ui.theme.White
@@ -38,6 +54,7 @@ import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.delay
 
+
 @Composable
 fun InteractiveMapContent(
     viewModel: DonationMapViewModel,
@@ -49,7 +66,6 @@ fun InteractiveMapContent(
         position = CameraPosition.fromLatLngZoom(bogota, 12f)
     }
 
-    val userLocation by viewModel.userLocation
     val visiblePoints by viewModel.visiblePoints
     val selectedMarkerState by viewModel.selectedMarkerState
     val currentnearestPoint by viewModel.currentnearestPoint
@@ -59,6 +75,17 @@ fun InteractiveMapContent(
     val markerStates = remember(visiblePoints) { mutableMapOf<String, MarkerState>() }
     val markersCreatedCount = remember { mutableIntStateOf(0) }
     var isMapLoaded by remember { mutableStateOf(false) }
+
+    val showOfflineBanner = remember(hasNetwork, isMapBlocked, visiblePoints) {
+        derivedStateOf {
+            !hasNetwork && !isMapBlocked && visiblePoints.isNotEmpty()
+        }
+    }
+    val bannerDismissed = remember { mutableStateOf(false) }
+
+    LaunchedEffect(hasNetwork) {
+        if (hasNetwork) bannerDismissed.value = false
+    }
 
     DisposableEffect(hasPermission) {
         if (hasPermission) {
@@ -102,14 +129,11 @@ fun InteractiveMapContent(
 
 
     Box(modifier.fillMaxSize()) {
-        // Si el mapa está bloqueado mostramos overlay explicativo y botón reintentar
         if (isMapBlocked) {
-            // overlay semi-opaque
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(Color(0xCCFFFFFF))
-                    .clickable(enabled = false) {}
             ) {
                 Column(
                     modifier = Modifier.align(Alignment.Center),
@@ -117,7 +141,8 @@ fun InteractiveMapContent(
                 ) {
                     Text(
                         "Se necesita conexión para cargar el mapa por primera vez.",
-                        color = DeepBlue
+                        color = DeepBlue,
+                        textAlign = TextAlign.Center
                     )
                     Spacer(Modifier.height(8.dp))
                     Button(onClick = { viewModel.refreshPoints() }) {
@@ -126,13 +151,13 @@ fun InteractiveMapContent(
                     Spacer(Modifier.height(8.dp))
                     Text(
                         if (!hasNetwork) "No hay conexión. Activa internet e intenta de nuevo." else "Intentando cargar...",
-                        color = Color.Gray
+                        color = Color.Gray,
+                        textAlign = TextAlign.Center
                     )
                 }
             }
         }
 
-        // Mantén el GoogleMap original; si isMapBlocked==true el overlay lo cubrirá
         if (!isMapBlocked) {
             Box(modifier.fillMaxSize()) {
                 if (hasPermission) {
@@ -193,6 +218,43 @@ fun InteractiveMapContent(
                 }
 
                 MapFilters(viewModel)
+                AnimatedVisibility(
+                    visible = showOfflineBanner.value && !bannerDismissed.value,
+                    enter = fadeIn() + slideInVertically(initialOffsetY = { it / 2 }),
+                    exit = fadeOut() + slideOutVertically(targetOffsetY = { it / 2 }),
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(12.dp)
+                ) {
+                    Card(
+                        modifier = Modifier
+                            .wrapContentWidth()
+                            .padding(4.dp)
+                            .clickable { bannerDismissed.value = true },
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFFAFAFA)),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .padding(horizontal = 12.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CloudOff,
+                                contentDescription = "Offline",
+                                modifier = Modifier.size(18.dp),
+                                tint = DeepBlue
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "You are offline. Showing locally saved donation points.",
+                                color = DeepBlue,
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                    }
+                }
             }
         }
     }
