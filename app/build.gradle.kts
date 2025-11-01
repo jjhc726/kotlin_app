@@ -44,6 +44,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.animation)
     kapt("org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.6.2")
     implementation(libs.androidx.room.ktx)
     kapt(libs.androidx.room.compiler)

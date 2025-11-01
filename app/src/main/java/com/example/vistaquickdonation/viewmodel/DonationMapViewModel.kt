@@ -21,6 +21,9 @@ import androidx.lifecycle.viewModelScope
 import android.annotation.SuppressLint
 import android.os.Looper
 import com.google.android.gms.location.*
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.async
+import kotlinx.coroutines.supervisorScope
 
 
 class DonationMapViewModel(
@@ -33,7 +36,6 @@ class DonationMapViewModel(
     private val fusedLocationClient =
         LocationServices.getFusedLocationProviderClient(getApplication<Application>().applicationContext)
 
-    // existing states...
     val userLocation = mutableStateOf<LatLng?>(null)
     val hasLocationPermission = mutableStateOf(false)
 
@@ -44,13 +46,11 @@ class DonationMapViewModel(
     val currentnearestPoint = mutableStateOf<DonationPoint?>(null)
     val selectedMarkerState = mutableStateOf<MarkerState?>(null)
 
-    // UI states
     private val allPoints = mutableStateOf<List<DonationPoint>>(emptyList())
     val visiblePoints = mutableStateOf<List<DonationPoint>>(emptyList())
     val isLoading = mutableStateOf(false)
     val errorMessage = mutableStateOf<String?>(null)
 
-    // NEW: network / map block states
     val hasNetwork = mutableStateOf(false)
     val isMapBlocked = mutableStateOf(false) // si true => overlay bloqueante por primera carga sin cache
 
@@ -59,7 +59,7 @@ class DonationMapViewModel(
     init {
         checkPermission()
         initConnectivity()
-        refreshPoints() // intentará remoto -> fallback local
+        refreshPoints()
     }
 
     private fun initConnectivity() {
@@ -70,15 +70,13 @@ class DonationMapViewModel(
         )
     }
 
-    private suspend fun onNetworkAvailable() {
+    private fun onNetworkAvailable() {
         hasNetwork.value = true
-        // If map was blocked because there was no cache, try to refresh remote and unblock if succeeded
         refreshPoints()
     }
 
     private suspend fun onNetworkLost() {
         hasNetwork.value = false
-        // If no local cache -> block map
         val local = withContext(Dispatchers.IO) { repository.getLocalDonationPoints() }
         isMapBlocked.value = local.isEmpty()
     }
@@ -89,7 +87,6 @@ class DonationMapViewModel(
         connectivityCallback?.let { networkObserver.unregisterCallback(it) }
     }
 
-    // permission & location logic unchanged...
     fun checkPermission(): Boolean {
         val granted = ActivityCompat.checkSelfPermission(
             getApplication<Application>().applicationContext,
@@ -109,37 +106,26 @@ class DonationMapViewModel(
         }
     }
 
-    // locationRequest & callback unchanged...
-    // startLocationUpdates/stopLocationUpdates unchanged
-
     fun refreshPoints() {
         viewModelScope.launch {
             isLoading.value = true
             errorMessage.value = null
 
-            try {
-                // repository.getAllDonationPoints() tries remote then fallback local
-                val points = withContext(Dispatchers.IO) {
-                    repository.getAllDonationPoints()
+            supervisorScope {
+                val remoteDeferred = async(Dispatchers.IO) { repository.getRemoteAndCache() }
+                val localDeferred = async(start = CoroutineStart.LAZY, context = Dispatchers.IO) {
+                    repository.getLocalDonationPoints()
                 }
+
+                val points = try {
+                    remoteDeferred.await()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    localDeferred.await()
+                }
+
                 allPoints.value = points
-                // If we have no points and also no network => block map
-                if (points.isEmpty() && !networkObserver.isOnline()) {
-                    isMapBlocked.value = true
-                } else {
-                    isMapBlocked.value = false
-                }
                 updateFilters()
-            } catch (e: Exception) {
-                e.printStackTrace()
-                errorMessage.value = e.message ?: "Error loading donation points"
-                // fallback to local
-                val local = withContext(Dispatchers.IO) { repository.getLocalDonationPoints() }
-                allPoints.value = local
-                isMapBlocked.value = local.isEmpty()
-                updateFilters()
-            } finally {
-                isLoading.value = false
             }
         }
     }
@@ -168,7 +154,6 @@ class DonationMapViewModel(
         }
 
         val nearest = points.minByOrNull { p ->
-            // sigue usando dx/dy simple (rápido). Puedes sustituir por haversine si quieres precisión.
             val dx = userLoc.latitude - p.position.latitude
             val dy = userLoc.longitude - p.position.longitude
             dx * dx + dy * dy
