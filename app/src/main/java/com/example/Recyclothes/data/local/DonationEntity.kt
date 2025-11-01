@@ -1,4 +1,4 @@
-package com.example.vistaquickdonation.data.local
+package com.example.Recyclothes.data.local
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey

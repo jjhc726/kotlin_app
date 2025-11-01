@@ -1,4 +1,4 @@
-package com.example.vistaquickdonation.ui.screens.home
+package com.example.Recyclothes.ui.screens.home
 
 import android.content.Intent
 import androidx.compose.foundation.background
@@ -22,13 +22,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.vistaquickdonation.data.repository.UserRepository
-import com.example.vistaquickdonation.ui.screens.quickDonation.QuickDonationActivity
-import com.example.vistaquickdonation.ui.screens.scheduledonation.ScheduleDonationActivity
-import com.example.vistaquickdonation.ui.theme.SoftBlue
-import com.example.vistaquickdonation.utils.NetworkObserver
-import com.example.vistaquickdonation.viewmodel.DonationViewModel
-import com.example.vistaquickdonation.viewmodel.NotificationsViewModel
+import com.example.Recyclothes.data.repository.UserRepository
+import com.example.Recyclothes.ui.screens.quickDonation.QuickDonationActivity
+import com.example.Recyclothes.ui.screens.scheduledonation.ScheduleDonationActivity
+import com.example.Recyclothes.ui.theme.SoftBlue
+import com.example.Recyclothes.utils.NetworkObserver
+import com.example.Recyclothes.viewmodel.DonationViewModel
+import com.example.Recyclothes.viewmodel.NotificationsViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class)

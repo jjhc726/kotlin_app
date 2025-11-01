@@ -1,11 +1,11 @@
-package com.example.vistaquickdonation.data.local
+package com.example.Recyclothes.data.local
 
 import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import com.example.vistaquickdonation.data.dao.DonationDao
-import com.example.vistaquickdonation.data.dao.DonationPointDao
+import com.example.Recyclothes.data.dao.DonationDao
+import com.example.Recyclothes.data.dao.DonationPointDao
 
 @Database(entities = [DonationPointEntity::class, DonationEntity::class], version = 1, exportSchema = false)
 

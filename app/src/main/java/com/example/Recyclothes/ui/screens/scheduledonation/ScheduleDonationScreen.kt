@@ -1,4 +1,4 @@
-package com.example.vistaquickdonation.ui.screens.scheduledonation
+package com.example.Recyclothes.ui.screens.scheduledonation
 
 import android.app.Activity
 import android.content.Intent
@@ -34,10 +34,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.vistaquickdonation.ui.screens.main.MainNavigationActivity
-import com.example.vistaquickdonation.ui.theme.DeepBlue
-import com.example.vistaquickdonation.ui.theme.SoftBlue
-import com.example.vistaquickdonation.viewmodel.ScheduleDonationViewModel
+import com.example.Recyclothes.ui.screens.main.MainNavigationActivity
+import com.example.Recyclothes.ui.theme.DeepBlue
+import com.example.Recyclothes.ui.theme.SoftBlue
+import com.example.Recyclothes.viewmodel.ScheduleDonationViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class)

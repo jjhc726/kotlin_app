@@ -1,10 +1,10 @@
-package com.example.vistaquickdonation.data.dao
+package com.example.Recyclothes.data.dao
 
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
-import com.example.vistaquickdonation.data.local.DonationEntity
+import com.example.Recyclothes.data.local.DonationEntity
 
 @Dao
 interface DonationDao {
