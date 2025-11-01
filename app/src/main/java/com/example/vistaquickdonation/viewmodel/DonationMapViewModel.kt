@@ -110,13 +110,11 @@ class DonationMapViewModel(
         viewModelScope.launch {
             isLoading.value = true
             errorMessage.value = null
-
             supervisorScope {
                 val remoteDeferred = async(Dispatchers.IO) { repository.getRemoteAndCache() }
                 val localDeferred = async(start = CoroutineStart.LAZY, context = Dispatchers.IO) {
                     repository.getLocalDonationPoints()
                 }
-
                 val points = try {
                     remoteDeferred.await()
                 } catch (e: Exception) {
@@ -125,6 +123,7 @@ class DonationMapViewModel(
                 }
 
                 allPoints.value = points
+                isMapBlocked.value = points.isEmpty()
                 updateFilters()
             }
         }

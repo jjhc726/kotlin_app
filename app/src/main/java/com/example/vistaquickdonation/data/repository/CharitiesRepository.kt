@@ -10,7 +10,7 @@ import android.content.Context
 
 
 class CharitiesRepository(
-    private val context: Context,
+    context: Context,
     private val service: FirebaseCharitiesService = FirebaseCharitiesService()
 ) {
 
@@ -24,18 +24,19 @@ class CharitiesRepository(
     }
 
     suspend fun getLocalDonationPoints(): List<DonationPoint> {
-        return withContext(Dispatchers.IO) {
-            dao.getAll().map { it.toDomain() }
+            return withContext(Dispatchers.IO) {
+                dao.getAll().map { it.toDomain() }
+            }
+        }
+
+    suspend fun refreshRemoteAndCache(): List<DonationPoint> {
+            val remote = withContext(Dispatchers.IO) {
+                service.getAllDonationPoints()
+            }
+            withContext(Dispatchers.IO) {
+                dao.insertAll(remote.map { it.toEntity() })
+            }
+            return remote
         }
     }
 
-    suspend fun refreshRemoteAndCache(): List<DonationPoint> {
-        val remote = withContext(Dispatchers.IO) {
-            service.getAllDonationPoints()
-        }
-        withContext(Dispatchers.IO) {
-            dao.insertAll(remote.map { it.toEntity() })
-        }
-        return remote
-    }
-}
