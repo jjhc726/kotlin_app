@@ -1,4 +1,4 @@
-package com.example.Recyclothes.ui.screens.home
+package com.example.vistaquickdonation.ui.screens.home
 
 import android.content.Intent
 import androidx.compose.foundation.background
@@ -10,6 +10,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -21,12 +22,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.Recyclothes.data.repository.UserRepository
-import com.example.Recyclothes.ui.screens.quickDonation.QuickDonationActivity
-import com.example.Recyclothes.ui.screens.scheduledonation.ScheduleDonationActivity
-import com.example.Recyclothes.ui.theme.SoftBlue
-import com.example.Recyclothes.viewmodel.DonationViewModel
-import com.example.Recyclothes.viewmodel.NotificationsViewModel
+import com.example.vistaquickdonation.data.repository.UserRepository
+import com.example.vistaquickdonation.ui.screens.quickDonation.QuickDonationActivity
+import com.example.vistaquickdonation.ui.screens.scheduledonation.ScheduleDonationActivity
+import com.example.vistaquickdonation.ui.theme.SoftBlue
+import com.example.vistaquickdonation.utils.NetworkObserver
+import com.example.vistaquickdonation.viewmodel.DonationViewModel
+import com.example.vistaquickdonation.viewmodel.NotificationsViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -45,20 +47,30 @@ fun HomePageScreen() {
 
     val notifSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var showNotifications by remember { mutableStateOf(false) }
-    var firstLoad by remember { mutableStateOf(true) } // 👈 NUEVA VARIABLE
+    var firstLoad by remember { mutableStateOf(true) }
+    val observer = remember { NetworkObserver(context) }
+
+    DisposableEffect(Unit) {
+        val callback = observer.registerCallback(
+            onAvailable = {  },
+            onLost = {  }
+        )
+        onDispose {
+            observer.unregisterCallback(callback)
+        }
+    }
 
     LaunchedEffect(Unit) {
         donationVM.loadTopDonors()
         userRepo.currentEmail()?.let { notificationsVM.start(it) }
     }
 
-    // Solo abre las notificaciones si NO es la primera carga
     LaunchedEffect(notifications) {
         if (!firstLoad && notifications.isNotEmpty()) {
             showNotifications = true
         }
         if (firstLoad) {
-            firstLoad = false // 👈 marca que ya pasó la primera vez
+            firstLoad = false
         }
     }
 

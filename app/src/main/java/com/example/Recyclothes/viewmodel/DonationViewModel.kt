@@ -9,10 +9,12 @@ import com.example.Recyclothes.data.model.DonationItem
 import com.example.Recyclothes.data.repository.DonationRepository
 import com.example.Recyclothes.data.repository.UserRepository
 import com.google.firebase.firestore.ListenerRegistration
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 data class TopDonor(
     val name: String,
@@ -21,7 +23,7 @@ data class TopDonor(
 
 class DonationViewModel(app: Application) : AndroidViewModel(app) {
 
-    private val repository = DonationRepository()
+    private val repository = DonationRepository(app.applicationContext)
     private val userRepo = UserRepository()
 
     val capturedImage = mutableStateOf<Bitmap?>(null)
@@ -90,10 +92,10 @@ class DonationViewModel(app: Application) : AndroidViewModel(app) {
         return null
     }
 
-    fun uploadDonation(onResult: (Boolean, String) -> Unit) {
+    fun uploadDonation(onResult: (Boolean, Boolean, String) -> Unit) {
         val firstError = validateInputs()
         if (firstError != null) {
-            onResult(false, firstError)
+            onResult(false, false, firstError)
             return
         }
 
@@ -105,17 +107,35 @@ class DonationViewModel(app: Application) : AndroidViewModel(app) {
             tags = selectedTags.value
         )
 
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val email = sessionEmail()
             if (email.isNullOrEmpty()) {
-                onResult(false, "User session not found.")
+                withContext(Dispatchers.Main) {
+                    onResult(false, false, "User session not found.")
+                }
                 return@launch
             }
 
-            val ok = repository.uploadDonation(donation, userEmail = email)
-            onResult(ok, if (ok) "Donation stored successfully!" else "Error uploading donation.")
+            try {
+                val uploadDonation = repository.uploadDonation(donation, userEmail = email)
+                val ok = uploadDonation
+                withContext(Dispatchers.Main) {
+                    if (ok) {
+                        onResult(true, false, "Donation stored successfully!")
+                    } else {
+                        onResult(false, true, "No internet connection. Donation saved locally.")
+                    }
+                }
+            } catch (_: Exception) {
+                repository.syncPendingDonations()
+                withContext(Dispatchers.Main) {
+                    onResult(false, true, "No internet connection. Donation saved locally.")
+                }
+            }
         }
     }
+
+
 
     fun loadTopDonors() {
         viewModelScope.launch {

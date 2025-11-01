@@ -1,4 +1,4 @@
-package com.example.Recyclothes.ui.screens.quickDonation
+package com.example.vistaquickdonation.ui.screens.quickDonation
 
 import android.app.Activity
 import android.content.Intent
@@ -16,9 +16,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.Recyclothes.ui.screens.home.HomePageActivity
-import com.example.Recyclothes.ui.theme.DeepBlue
-import com.example.Recyclothes.viewmodel.DonationViewModel
+import com.example.vistaquickdonation.ui.screens.main.MainNavigationActivity
+import com.example.vistaquickdonation.ui.theme.DeepBlue
+import com.example.vistaquickdonation.viewmodel.DonationViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -29,15 +29,18 @@ fun DonationSubmitButton(viewModel: DonationViewModel) {
 
     Button(
         onClick = {
-            viewModel.uploadDonation { success, message ->
+            viewModel.uploadDonation { success, offline, message ->
                 scope.launch {
                     Toast.makeText(context, message, Toast.LENGTH_LONG).show()
 
-                    if (success) {
+                    if (success || offline) {
                         delay(1000)
-                        val intent = Intent(context, HomePageActivity::class.java)
+                        val activity = context as? Activity
+                        val intent = Intent(context, MainNavigationActivity::class.java).apply {
+                            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
                         context.startActivity(intent)
-                        (context as? Activity)?.finish()
+                        activity?.finish()
                     }
                 }
             }

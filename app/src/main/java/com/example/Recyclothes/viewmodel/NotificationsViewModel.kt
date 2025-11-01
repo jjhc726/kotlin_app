@@ -1,6 +1,7 @@
 package com.example.Recyclothes.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.Recyclothes.data.model.AppNotification
 import com.example.Recyclothes.data.repository.DonationRepository
@@ -12,8 +13,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class NotificationsViewModel(
-    private val repo: DonationRepository = DonationRepository()
-) : ViewModel() {
+    application: Application
+) : AndroidViewModel(application) {
+
+    private val repo = DonationRepository(application)
 
     private var listener: ListenerRegistration? = null
 
