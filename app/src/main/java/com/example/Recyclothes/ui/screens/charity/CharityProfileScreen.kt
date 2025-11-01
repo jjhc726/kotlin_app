@@ -129,7 +129,6 @@ fun CharityProfileScreen(
         Spacer(modifier = Modifier.height(30.dp))
 
         Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-            // ❤️ Like
             IconButton(onClick = {
                 liked = !liked
                 viewModel.addInteraction()
@@ -141,7 +140,6 @@ fun CharityProfileScreen(
                 )
             }
 
-            // 📤 Share
             IconButton(onClick = {
                 val shareIntent = Intent().apply {
                     action = Intent.ACTION_SEND
@@ -164,12 +162,9 @@ fun CharityProfileScreen(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // 💰 Botón Donar
         Button(
             onClick = {
-                // Aquí se incrementa la interacción al donar
                 viewModel.addInteraction()
-                // Acción adicional (abrir link, diálogo, etc.)
             },
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(containerColor = DeepBlue)

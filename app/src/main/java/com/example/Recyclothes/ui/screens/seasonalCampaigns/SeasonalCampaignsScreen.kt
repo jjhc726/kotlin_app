@@ -85,7 +85,6 @@ fun SeasonalCampaignsScreen(
             }
         }
     } else {
-        // 🔹 Se cambia el parámetro: ahora recibe directamente el objeto campaign
         CampaignDetailScreen(
             campaign = selectedCampaign,
             onBackClick = { viewModel.goBack() }

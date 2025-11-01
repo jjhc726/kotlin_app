@@ -52,7 +52,7 @@ class DonationMapViewModel(
     val errorMessage = mutableStateOf<String?>(null)
 
     val hasNetwork = mutableStateOf(false)
-    val isMapBlocked = mutableStateOf(false) // si true => overlay bloqueante por primera carga sin cache
+    val isMapBlocked = mutableStateOf(false)
 
     private var connectivityCallback: ConnectivityManager.NetworkCallback? = null
 

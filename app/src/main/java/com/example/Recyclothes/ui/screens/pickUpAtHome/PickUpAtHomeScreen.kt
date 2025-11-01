@@ -36,7 +36,6 @@ fun PickUpAtHomeScreen() {
     ) {
         Spacer(Modifier.height(32.dp))
 
-        // Inputs
         @Composable
         fun InputCard(label: String) {
             Text(label, fontSize = 18.sp, fontWeight = FontWeight.Medium, color = primaryColor)

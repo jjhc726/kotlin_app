@@ -45,7 +45,7 @@ class FirebaseCharitiesService(
         }
 
 
-        val finalPosition = position ?: return null // si necesita position obligatoria
+        val finalPosition = position ?: return null
 
         return DonationPoint(
             id = id,
