@@ -27,32 +27,5 @@ class ScheduledDonationLocalDataSource(context: Context) {
             android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE)
     }
 
-    fun getAll(): List<OfflineScheduledDonation> {
-        val db = helper.readableDatabase
-        val list = mutableListOf<OfflineScheduledDonation>()
-        db.rawQuery("""
-            SELECT requestId,userEmail,title,dateMillis,timeText,note,clothingType,size,brand,createdAtMillis
-            FROM offline_scheduled ORDER BY createdAtMillis ASC
-        """.trimIndent(), null).use { c ->
-            while (c.moveToNext()) {
-                list += OfflineScheduledDonation(
-                    requestId = c.getString(0),
-                    userEmail = c.getString(1),
-                    title = c.getString(2),
-                    dateMillis = c.getLong(3),
-                    timeText = c.getString(4),
-                    note = c.getString(5),
-                    clothingType = c.getString(6),
-                    size = c.getString(7),
-                    brand = c.getString(8),
-                    createdAtMillis = c.getLong(9)
-                )
-            }
-        }
-        return list
-    }
 
-    fun deleteById(id: String) {
-        helper.writableDatabase.delete("offline_scheduled", "requestId=?", arrayOf(id))
-    }
 }
