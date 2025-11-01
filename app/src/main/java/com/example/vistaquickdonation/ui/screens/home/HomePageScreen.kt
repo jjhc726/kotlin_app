@@ -13,7 +13,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -42,10 +44,22 @@ fun HomePageScreen() {
     val lastDonationText by notificationsVM.lastDonationText.collectAsState()
 
     val notifSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var showNotifications by remember { mutableStateOf(false) }
+    var firstLoad by remember { mutableStateOf(true) } // 👈 NUEVA VARIABLE
 
     LaunchedEffect(Unit) {
         donationVM.loadTopDonors()
         userRepo.currentEmail()?.let { notificationsVM.start(it) }
+    }
+
+    // Solo abre las notificaciones si NO es la primera carga
+    LaunchedEffect(notifications) {
+        if (!firstLoad && notifications.isNotEmpty()) {
+            showNotifications = true
+        }
+        if (firstLoad) {
+            firstLoad = false // 👈 marca que ya pasó la primera vez
+        }
     }
 
     fun go(target: Class<*>) = context.startActivity(Intent(context, target))
@@ -54,7 +68,7 @@ fun HomePageScreen() {
         modifier = Modifier
             .fillMaxSize()
             .background(SoftBlue)
-            .padding(horizontal = 20.dp, vertical = 0.dp)
+            .padding(horizontal = 20.dp)
             .verticalScroll(scrollState),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -66,12 +80,12 @@ fun HomePageScreen() {
         )
     }
 
-    val showNotifications = notifications.isNotEmpty()
     if (showNotifications) {
         NotificationsSheet(
             sheetState = notifSheetState,
-            onDismiss = { /* nada */ },
+            onDismiss = { showNotifications = false },
             notifications = notifications
         )
     }
 }
+
