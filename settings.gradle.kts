@@ -22,5 +22,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "vista quick donation"
+rootProject.name = "Recyclothes"
 include(":app")
