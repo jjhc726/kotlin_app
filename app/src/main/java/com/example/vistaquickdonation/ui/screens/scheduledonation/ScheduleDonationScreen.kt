@@ -1,14 +1,31 @@
 package com.example.vistaquickdonation.ui.screens.scheduledonation
 
 import android.app.Activity
+import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -17,11 +34,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.vistaquickdonation.ui.screens.main.MainNavigationActivity
 import com.example.vistaquickdonation.ui.theme.DeepBlue
 import com.example.vistaquickdonation.ui.theme.SoftBlue
 import com.example.vistaquickdonation.viewmodel.ScheduleDonationViewModel
-import android.content.Intent
-import com.example.vistaquickdonation.ui.screens.home.HomePageActivity
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -149,12 +165,12 @@ fun ScheduleDonationDesign(
                 vm.submit(
                     onOnlineSuccess = {
                         Toast.makeText(ctx, "Scheduled online successfully", Toast.LENGTH_LONG).show()
-                        ctx.startActivity(Intent(ctx, HomePageActivity::class.java))
+                        ctx.startActivity(Intent(ctx, MainNavigationActivity::class.java))
                         (ctx as? Activity)?.finish()
                     },
                     onQueuedOffline = { msg ->
                         Toast.makeText(ctx, msg, Toast.LENGTH_LONG).show()
-                        ctx.startActivity(Intent(ctx, HomePageActivity::class.java))
+                        ctx.startActivity(Intent(ctx, MainNavigationActivity::class.java))
                         (ctx as? Activity)?.finish()
                     },
                     onError = { err ->
