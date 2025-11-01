@@ -7,11 +7,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.vistaquickdonation"
+    namespace = "com.example.Recyclothes"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.vistaquickdonation"
+        applicationId = "com.example.Recyclothes"
         minSdk = 24
         targetSdk = 36
         versionCode = 1

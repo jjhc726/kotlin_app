@@ -14,7 +14,7 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.VistaQuickDonation">
+        android:theme="@style/Theme.RecyclothesTheme">
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
@@ -42,7 +42,7 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.VistaQuickDonation">
+            android:theme="@style/Theme.RecyclothesTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
@@ -51,7 +51,7 @@
         <activity
             android:name=".ui.screens.login.LoginActivity"
             android:exported="true"
-            android:theme="@style/Theme.VistaQuickDonation">
+            android:theme="@style/Theme.RecyclothesTheme">
 
         </activity>
 

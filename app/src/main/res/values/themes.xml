@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.VistaQuickDonation" parent="Theme.AppCompat.DayNight.NoActionBar">
+    <style name="Theme.RecyclothesTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
         <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
 
-    <style name="Theme.VistaQuickDonation.AppCompat" parent="Theme.AppCompat.DayNight.NoActionBar">
+    <style name="Theme.RecyclothesTheme.AppCompat" parent="Theme.AppCompat.DayNight.NoActionBar">
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:windowBackground">@android:color/transparent</item>
     </style>
