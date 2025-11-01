@@ -9,23 +9,31 @@ import androidx.core.app.ActivityCompat
 import androidx.lifecycle.AndroidViewModel
 import com.example.vistaquickdonation.data.model.DonationPoint
 import com.example.vistaquickdonation.data.repository.CharitiesRepository
+import com.example.vistaquickdonation.utils.NetworkObserver
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.MarkerState
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import android.net.ConnectivityManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import androidx.lifecycle.viewModelScope
+import android.annotation.SuppressLint
+import android.os.Looper
+import com.google.android.gms.location.*
+
 
 class DonationMapViewModel(
     application: Application,
 ) : AndroidViewModel(application) {
 
-    private val repository = CharitiesRepository()
+    private val repository = CharitiesRepository(getApplication())
+    private val networkObserver = NetworkObserver(getApplication())
+
     private val fusedLocationClient =
         LocationServices.getFusedLocationProviderClient(getApplication<Application>().applicationContext)
 
+    // existing states...
     val userLocation = mutableStateOf<LatLng?>(null)
     val hasLocationPermission = mutableStateOf(false)
 
@@ -36,18 +44,52 @@ class DonationMapViewModel(
     val currentnearestPoint = mutableStateOf<DonationPoint?>(null)
     val selectedMarkerState = mutableStateOf<MarkerState?>(null)
 
-    // estados de UI
+    // UI states
     private val allPoints = mutableStateOf<List<DonationPoint>>(emptyList())
     val visiblePoints = mutableStateOf<List<DonationPoint>>(emptyList())
     val isLoading = mutableStateOf(false)
     val errorMessage = mutableStateOf<String?>(null)
 
+    // NEW: network / map block states
+    val hasNetwork = mutableStateOf(false)
+    val isMapBlocked = mutableStateOf(false) // si true => overlay bloqueante por primera carga sin cache
+
+    private var connectivityCallback: ConnectivityManager.NetworkCallback? = null
 
     init {
         checkPermission()
+        initConnectivity()
+        refreshPoints() // intentará remoto -> fallback local
+    }
+
+    private fun initConnectivity() {
+        hasNetwork.value = networkObserver.isOnline()
+        connectivityCallback = networkObserver.registerCallback(
+            onAvailable = { viewModelScope.launch { onNetworkAvailable() } },
+            onLost = { viewModelScope.launch { onNetworkLost() } }
+        )
+    }
+
+    private suspend fun onNetworkAvailable() {
+        hasNetwork.value = true
+        // If map was blocked because there was no cache, try to refresh remote and unblock if succeeded
         refreshPoints()
     }
 
+    private suspend fun onNetworkLost() {
+        hasNetwork.value = false
+        // If no local cache -> block map
+        val local = withContext(Dispatchers.IO) { repository.getLocalDonationPoints() }
+        isMapBlocked.value = local.isEmpty()
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        stopLocationUpdates()
+        connectivityCallback?.let { networkObserver.unregisterCallback(it) }
+    }
+
+    // permission & location logic unchanged...
     fun checkPermission(): Boolean {
         val granted = ActivityCompat.checkSelfPermission(
             getApplication<Application>().applicationContext,
@@ -67,21 +109,35 @@ class DonationMapViewModel(
         }
     }
 
+    // locationRequest & callback unchanged...
+    // startLocationUpdates/stopLocationUpdates unchanged
+
     fun refreshPoints() {
         viewModelScope.launch {
             isLoading.value = true
             errorMessage.value = null
 
             try {
+                // repository.getAllDonationPoints() tries remote then fallback local
                 val points = withContext(Dispatchers.IO) {
                     repository.getAllDonationPoints()
                 }
                 allPoints.value = points
+                // If we have no points and also no network => block map
+                if (points.isEmpty() && !networkObserver.isOnline()) {
+                    isMapBlocked.value = true
+                } else {
+                    isMapBlocked.value = false
+                }
                 updateFilters()
             } catch (e: Exception) {
                 e.printStackTrace()
                 errorMessage.value = e.message ?: "Error loading donation points"
-                visiblePoints.value = emptyList()
+                // fallback to local
+                val local = withContext(Dispatchers.IO) { repository.getLocalDonationPoints() }
+                allPoints.value = local
+                isMapBlocked.value = local.isEmpty()
+                updateFilters()
             } finally {
                 isLoading.value = false
             }
@@ -112,6 +168,7 @@ class DonationMapViewModel(
         }
 
         val nearest = points.minByOrNull { p ->
+            // sigue usando dx/dy simple (rápido). Puedes sustituir por haversine si quieres precisión.
             val dx = userLoc.latitude - p.position.latitude
             val dy = userLoc.longitude - p.position.longitude
             dx * dx + dy * dy
@@ -121,7 +178,42 @@ class DonationMapViewModel(
 
     fun updateFilters() {
         visiblePoints.value = applyFilters(allPoints.value)
-        // recalculamos inmediatamente cuando cambian los filtros
         findAndShowClosestPoint()
     }
+    private val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5000L)
+        .setMinUpdateDistanceMeters(5f)
+        .setMinUpdateIntervalMillis(2000L)
+        .setMaxUpdateDelayMillis(10000L)
+        .build()
+
+    private val locationCallback = object : LocationCallback() {
+        override fun onLocationResult(result: LocationResult) {
+            val loc = result.lastLocation ?: return
+            val newLatLng = LatLng(loc.latitude, loc.longitude)
+            val prev = userLocation.value
+            if (prev == null || prev.latitude != newLatLng.latitude || prev.longitude != newLatLng.longitude) {
+                userLocation.value = newLatLng
+                findAndShowClosestPoint()
+            }
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    fun startLocationUpdates() {
+        if (!hasLocationPermission.value) return
+        try {
+            fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    fun stopLocationUpdates() {
+        try {
+            fusedLocationClient.removeLocationUpdates(locationCallback)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
 }

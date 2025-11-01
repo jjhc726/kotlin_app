@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("com.google.gms.google-services")
+    id("kotlin-kapt")
 }
 
 android {
@@ -29,12 +30,12 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlin {
         jvmToolchain {
-            languageVersion.set(JavaLanguageVersion.of(11))
+            languageVersion.set(JavaLanguageVersion.of(17))
         }
     }
     buildFeatures {
@@ -43,6 +44,9 @@ android {
 }
 
 dependencies {
+    kapt("org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.6.2")
+    implementation(libs.androidx.room.ktx)
+    kapt(libs.androidx.room.compiler)
     implementation("com.google.firebase:firebase-auth-ktx:22.3.1")
     implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
     implementation("com.google.firebase:firebase-analytics-ktx")
@@ -65,7 +69,8 @@ dependencies {
     implementation("com.google.android.gms:play-services-maps:19.2.0")
     implementation("com.google.android.gms:play-services-location:21.3.0")
     implementation("com.google.maps.android:maps-compose:6.12.0")
-    implementation(libs.androidx.compose.foundation)
+    implementation(libs.androidx.foundation)
+    implementation(libs.androidx.foundation.layout)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -74,6 +79,10 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 }
+kapt {
+    correctErrorTypes = true
+}
+
 
 
 
