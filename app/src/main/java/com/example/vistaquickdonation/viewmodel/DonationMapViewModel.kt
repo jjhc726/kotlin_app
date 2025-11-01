@@ -110,23 +110,21 @@ class DonationMapViewModel(
         viewModelScope.launch {
             isLoading.value = true
             errorMessage.value = null
-            try {
-                val points = withContext(Dispatchers.IO) {
-                    repository.getAllDonationPoints()
+            supervisorScope {
+                val remoteDeferred = async(Dispatchers.IO) { repository.getRemoteAndCache() }
+                val localDeferred = async(start = CoroutineStart.LAZY, context = Dispatchers.IO) {
+                    repository.getLocalDonationPoints()
+                }
+                val points = try {
+                    remoteDeferred.await()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    localDeferred.await()
                 }
 
                 allPoints.value = points
-                if (points.isEmpty() && !networkObserver.isOnline()) {
-                    isMapBlocked.value = true
-                } else {
-                    isMapBlocked.value = false
-                }
+                isMapBlocked.value = points.isEmpty()
                 updateFilters()
-            } catch (e: Exception) {
-                e.printStackTrace()
-                errorMessage.value = e.message ?: "Error loading donation points"
-            } finally {
-                isLoading.value = false
             }
         }
     }
