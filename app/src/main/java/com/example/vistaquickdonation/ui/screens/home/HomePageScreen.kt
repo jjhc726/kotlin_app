@@ -26,6 +26,7 @@ import com.example.vistaquickdonation.ui.theme.SoftBlue
 import com.example.vistaquickdonation.viewmodel.DonationViewModel
 import com.example.vistaquickdonation.viewmodel.NotificationsViewModel
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomePageScreen() {
