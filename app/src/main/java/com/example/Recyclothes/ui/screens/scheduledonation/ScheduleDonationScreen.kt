@@ -17,11 +17,13 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,9 +36,11 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.Recyclothes.data.model.FeatureId
 import com.example.Recyclothes.ui.screens.main.MainNavigationActivity
 import com.example.Recyclothes.ui.theme.DeepBlue
 import com.example.Recyclothes.ui.theme.SoftBlue
+import com.example.Recyclothes.utils.UsageTracker
 import com.example.Recyclothes.viewmodel.ScheduleDonationViewModel
 
 
@@ -45,6 +49,9 @@ import com.example.Recyclothes.viewmodel.ScheduleDonationViewModel
 fun ScheduleDonationDesign(
     vm: ScheduleDonationViewModel = viewModel()
 ) {
+    LaunchedEffect(Unit) {
+        UsageTracker.bump(FeatureId.SCHEDULE_DONATION_OPEN)
+    }
     val ctx = LocalContext.current
     val scroll = rememberScrollState()
 
@@ -104,7 +111,12 @@ fun ScheduleDonationDesign(
                 label = { Text("Clothing Type (Required)") },
                 supportingText = { vm.typeError.value?.let { Text(it, color = Color.Red) } },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandType) },
-                modifier = Modifier.menuAnchor().fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .menuAnchor(
+                        type = ExposedDropdownMenuAnchorType.PrimaryNotEditable,
+                        enabled = true
+                    )
             )
             ExposedDropdownMenu(expanded = expandType, onDismissRequest = { expandType = false }) {
                 types.forEach { t ->
@@ -127,7 +139,12 @@ fun ScheduleDonationDesign(
                 label = { Text("Size (Required)") },
                 supportingText = { vm.sizeError.value?.let { Text(it, color = Color.Red) } },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandSize) },
-                modifier = Modifier.menuAnchor().fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .menuAnchor(
+                        type = ExposedDropdownMenuAnchorType.PrimaryNotEditable,
+                        enabled = true
+                    )
             )
             ExposedDropdownMenu(expanded = expandSize, onDismissRequest = { expandSize = false }) {
                 sizes.forEach { s ->

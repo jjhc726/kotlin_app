@@ -56,6 +56,10 @@ import com.example.Recyclothes.ui.theme.RecyclothesTheme
 import com.example.Recyclothes.viewmodel.CharityViewModel
 import com.example.Recyclothes.viewmodel.NotificationsViewModel
 import com.example.Recyclothes.viewmodel.SeasonalCampaignsViewModel
+import androidx.compose.runtime.LaunchedEffect
+import com.example.Recyclothes.data.model.FeatureId
+import com.example.Recyclothes.ui.screens.usagefeatures.UsageFeaturesActivity
+import com.example.Recyclothes.utils.UsageTracker
 
 class MainNavigationActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -67,6 +71,8 @@ class MainNavigationActivity : ComponentActivity() {
         }
     }
 }
+
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -82,6 +88,8 @@ fun MainNavigationScreen() {
     var expanded by remember { mutableStateOf(false) }
     var showNotifications by remember { mutableStateOf(false) }
     val notifSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+
 
     Scaffold(
         topBar = {
@@ -104,6 +112,13 @@ fun MainNavigationScreen() {
                                 expanded = expanded,
                                 onDismissRequest = { expanded = false }
                             ) {
+                                DropdownMenuItem(
+                                    text = { Text("Features usage") },
+                                    onClick = {
+                                        expanded = false
+                                        context.startActivity(Intent(context, UsageFeaturesActivity::class.java))
+                                    }
+                                )
                                 DropdownMenuItem(
                                     text = { Text("Log out") },
                                     onClick = {
@@ -142,7 +157,8 @@ fun MainNavigationScreen() {
                 },
                 actions = {
                     if (selectedItem == BottomNavItem.Home) {
-                        IconButton(onClick = { showNotifications = true }) {
+                        IconButton(onClick = { showNotifications = true
+                            UsageTracker.bump(FeatureId.NOTIFICATIONS_OPEN)}) {
                             Icon(
                                 Icons.Default.Notifications,
                                 contentDescription = "Notifications",
@@ -209,6 +225,15 @@ fun MainNavigationScreen() {
                     }
                 }
             }
+        }
+    }
+    LaunchedEffect(selectedItem) {
+        when (selectedItem) {
+            BottomNavItem.Home -> UsageTracker.bump(FeatureId.HOME_OPEN)
+            BottomNavItem.Map -> UsageTracker.bump(FeatureId.MAP_OPEN)
+            BottomNavItem.Charities -> UsageTracker.bump(FeatureId.CHARITIES_OPEN)
+            BottomNavItem.SeasonalCampaigns -> UsageTracker.bump(FeatureId.SEASONAL_CAMPAIGNS_OPEN)
+            BottomNavItem.PickUp -> UsageTracker.bump(FeatureId.PICKUP_OPEN)
         }
     }
 }

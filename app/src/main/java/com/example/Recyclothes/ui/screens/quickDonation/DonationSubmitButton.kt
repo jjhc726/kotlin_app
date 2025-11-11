@@ -16,8 +16,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.Recyclothes.data.model.FeatureId
 import com.example.Recyclothes.ui.screens.main.MainNavigationActivity
 import com.example.Recyclothes.ui.theme.DeepBlue
+import com.example.Recyclothes.utils.UsageTracker
 import com.example.Recyclothes.viewmodel.DonationViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -34,6 +36,7 @@ fun DonationSubmitButton(viewModel: DonationViewModel) {
                     Toast.makeText(context, message, Toast.LENGTH_LONG).show()
 
                     if (success || offline) {
+                        UsageTracker.bump(FeatureId.QUICK_DONATION_SUBMIT)
                         delay(1000)
                         val activity = context as? Activity
                         val intent = Intent(context, MainNavigationActivity::class.java).apply {

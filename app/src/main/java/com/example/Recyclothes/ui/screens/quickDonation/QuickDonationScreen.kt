@@ -13,23 +13,28 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight.Companion.Bold
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.Recyclothes.data.model.FeatureId
 import com.example.Recyclothes.ui.theme.DeepBlue
 import com.example.Recyclothes.ui.theme.MediumBlue
 import com.example.Recyclothes.ui.theme.SoftBlue
 import com.example.Recyclothes.ui.theme.TealDark
+import com.example.Recyclothes.utils.UsageTracker
 import com.example.Recyclothes.viewmodel.DonationViewModel
 
 @Composable
 fun QuickDonationDesign(viewModel: DonationViewModel) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scrollState = rememberScrollState()
-
+    LaunchedEffect(Unit) {
+        UsageTracker.bump(FeatureId.QUICK_DONATION_OPEN)
+    }
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = MediumBlue
