@@ -57,5 +57,9 @@
             android:exported="true"
             android:theme="@style/Theme.RecyclothesTheme"/>
 
+        <activity
+            android:name=".ui.screens.favorites.FavoritesHostActivity"
+            android:exported="false" />
+
     </application>
 </manifest>
