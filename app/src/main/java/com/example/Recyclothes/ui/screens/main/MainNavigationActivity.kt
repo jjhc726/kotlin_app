@@ -7,12 +7,15 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -53,13 +56,14 @@ import com.example.Recyclothes.ui.theme.DeepBlue
 import com.example.Recyclothes.ui.theme.MediumBlue
 import com.example.Recyclothes.ui.theme.TealDark
 import com.example.Recyclothes.ui.theme.RecyclothesTheme
-import com.example.Recyclothes.viewmodel.CharityViewModel
 import com.example.Recyclothes.viewmodel.NotificationsViewModel
 import com.example.Recyclothes.viewmodel.SeasonalCampaignsViewModel
 import androidx.compose.runtime.LaunchedEffect
+import com.example.Recyclothes.data.model.Charity
 import com.example.Recyclothes.data.model.FeatureId
 import com.example.Recyclothes.ui.screens.usagefeatures.UsageFeaturesActivity
 import com.example.Recyclothes.utils.UsageTracker
+import com.example.Recyclothes.viewmodel.CharityCatalogViewModel
 
 class MainNavigationActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -81,7 +85,6 @@ fun MainNavigationScreen() {
     val userRepo = remember { UserRepository() }
     val notificationsVM = viewModel<NotificationsViewModel>()
     val notifications by notificationsVM.notifications.collectAsState()
-    val charityVM = viewModel<CharityViewModel>()
     val seasonalVM = viewModel<SeasonalCampaignsViewModel>()
 
     var selectedItem by remember { mutableStateOf<BottomNavItem>(BottomNavItem.Home) }
@@ -185,20 +188,37 @@ fun MainNavigationScreen() {
             when (selectedItem) {
                 BottomNavItem.Home -> HomePageScreen()
                 BottomNavItem.Map -> InteractiveMapScreen()
+
                 BottomNavItem.Charities -> {
-                    val selectedCharity = charityVM.selectedCharity
+                    val catalogVM: CharityCatalogViewModel = viewModel()
+                    val charities by catalogVM.charities.collectAsState()
+
+                    var selectedCharity by remember { mutableStateOf<Charity?>(null) }
+
                     if (selectedCharity == null) {
-                        CharityListScreen(
-                            charities = charityVM.charities,
-                            onCharityClick = { charityVM.selectCharity(it) }
-                        )
+                        if (charities.isEmpty()) {
+                            Column(
+                                Modifier.fillMaxSize().padding(24.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text("Fetching charities…", color = DeepBlue)
+                                Spacer(Modifier.height(8.dp))
+                                Button(onClick = { catalogVM.refresh() }) { Text("Refresh") }
+                            }
+                        } else {
+                            CharityListScreen(
+                                charities = charities,
+                                onCharityClick = { selectedCharity = it }
+                            )
+                        }
                     } else {
                         CharityProfileScreen(
-                            charity = selectedCharity,
-                            onBackClick = { charityVM.goBack() }
+                            charity = selectedCharity!!,
+                            onBackClick = { selectedCharity = null }
                         )
                     }
                 }
+
                 BottomNavItem.SeasonalCampaigns -> SeasonalCampaignsScreen(viewModel = seasonalVM)
                 BottomNavItem.PickUp -> PickUpAtHomeScreen()
             }
