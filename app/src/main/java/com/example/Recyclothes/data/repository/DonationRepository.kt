@@ -84,4 +84,9 @@ class DonationRepository(
     suspend fun getLastDonationTimestamp(userEmail: String): Timestamp? {
         return service.getLastDonationTimestamp(userEmail)
     }
+
+    suspend fun insertPending(entity: DonationEntity) {
+        dao.insertDonation(entity)
+    }
+
 }

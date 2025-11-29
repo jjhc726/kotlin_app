@@ -5,9 +5,11 @@ import android.graphics.Bitmap
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.Recyclothes.data.local.DonationEntity
 import com.example.Recyclothes.data.model.DonationItem
 import com.example.Recyclothes.data.repository.DonationRepository
 import com.example.Recyclothes.data.repository.UserRepository
+import com.example.Recyclothes.utils.NetworkObserver
 import com.google.firebase.firestore.ListenerRegistration
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -91,45 +93,66 @@ class DonationViewModel(app: Application) : AndroidViewModel(app) {
 
         return null
     }
-
     fun uploadDonation(onResult: (Boolean, Boolean, String) -> Unit) {
-        val firstError = validateInputs()
-        if (firstError != null) {
-            onResult(false, false, firstError)
+        val error = validateInputs()
+        if (error != null) {
+            onResult(false, false, error)
             return
         }
 
-        val donation = DonationItem(
+        val email = sessionEmail()
+        if (email.isNullOrEmpty()) {
+            onResult(false, false, "User session not found.")
+            return
+        }
+
+        val localDonation = DonationEntity(
             description = description.value.trim(),
             clothingType = clothingType.value,
             size = size.value.trim(),
             brand = brand.value.trim(),
-            tags = selectedTags.value
+            tags = selectedTags.value.joinToString(","),
+            userEmail = email
         )
 
+        val donationItem = DonationItem(
+            description = localDonation.description,
+            clothingType = localDonation.clothingType,
+            size = localDonation.size,
+            brand = localDonation.brand,
+            tags = selectedTags.value,
+            userEmail = email
+        )
+
+        val net = NetworkObserver(getApplication()).isOnline()
+
         viewModelScope.launch(Dispatchers.IO) {
-            val email = sessionEmail()
-            if (email.isNullOrEmpty()) {
+            if (!net) {
+                // Guardado local inmediato
+                repository.insertPending(localDonation)
+
                 withContext(Dispatchers.Main) {
-                    onResult(false, false, "User session not found.")
+                    onResult(true, true, "Donation saved offline.")
                 }
                 return@launch
             }
 
             try {
-                val uploadDonation = repository.uploadDonation(donation, userEmail = email)
-                val ok = uploadDonation
+                val uploaded = repository.uploadDonation(donationItem, email)
+
                 withContext(Dispatchers.Main) {
-                    if (ok) {
-                        onResult(true, false, "Donation stored successfully!")
+                    if (uploaded) {
+                        onResult(true, false, "Donation uploaded successfully.")
                     } else {
-                        onResult(false, true, "No internet connection. Donation saved locally.")
+                        onResult(true, true, "Donation saved offline.")
                     }
                 }
-            } catch (_: Exception) {
-                repository.syncPendingDonations()
+
+            } catch (e: Exception) {
+                repository.insertPending(localDonation)
+
                 withContext(Dispatchers.Main) {
-                    onResult(false, true, "No internet connection. Donation saved locally.")
+                    onResult(true, true, "Donation saved offline.")
                 }
             }
         }

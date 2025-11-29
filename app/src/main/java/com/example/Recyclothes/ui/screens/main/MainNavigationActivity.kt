@@ -2,6 +2,7 @@ package com.example.Recyclothes.ui.screens.main
 
 import android.content.Context
 import android.content.Intent
+import android.net.ConnectivityManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -59,20 +60,48 @@ import com.example.Recyclothes.ui.theme.RecyclothesTheme
 import com.example.Recyclothes.viewmodel.NotificationsViewModel
 import com.example.Recyclothes.viewmodel.SeasonalCampaignsViewModel
 import androidx.compose.runtime.LaunchedEffect
+import androidx.lifecycle.lifecycleScope
 import com.example.Recyclothes.data.model.Charity
 import com.example.Recyclothes.data.model.FeatureId
+import com.example.Recyclothes.data.repository.DonationRepository
 import com.example.Recyclothes.ui.screens.usagefeatures.UsageFeaturesActivity
+import com.example.Recyclothes.utils.NetworkObserver
 import com.example.Recyclothes.utils.UsageTracker
 import com.example.Recyclothes.viewmodel.CharityCatalogViewModel
+import kotlinx.coroutines.launch
 
 class MainNavigationActivity : ComponentActivity() {
+
+    private lateinit var networkObserver: NetworkObserver
+    private var networkCallback: ConnectivityManager.NetworkCallback? = null
+    private lateinit var donationRepo: DonationRepository
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        donationRepo = DonationRepository(this)
+        networkObserver = NetworkObserver(this)
+
+        networkCallback = networkObserver.registerCallback(
+            onAvailable = {
+                lifecycleScope.launch {
+                    donationRepo.syncPendingDonations()
+                }
+            },
+            onLost = {
+            }
+        )
+
         setContent {
             RecyclothesTheme {
                 MainNavigationScreen()
             }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        networkCallback?.let { networkObserver.unregisterCallback(it) }
     }
 }
 
