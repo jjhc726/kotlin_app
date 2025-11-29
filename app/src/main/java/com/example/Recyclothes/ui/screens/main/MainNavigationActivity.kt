@@ -64,6 +64,7 @@ import androidx.lifecycle.lifecycleScope
 import com.example.Recyclothes.data.model.Charity
 import com.example.Recyclothes.data.model.FeatureId
 import com.example.Recyclothes.data.repository.DonationRepository
+import com.example.Recyclothes.ui.screens.favorites.FavoritesHostActivity
 import com.example.Recyclothes.ui.screens.localdrafts.LocalDraftsActivity
 import com.example.Recyclothes.ui.screens.usagefeatures.UsageFeaturesActivity
 import com.example.Recyclothes.utils.NetworkObserver
@@ -150,6 +151,14 @@ fun MainNavigationScreen() {
                                     onClick = {
                                         expanded = false
                                         context.startActivity(Intent(context, UsageFeaturesActivity::class.java))
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Favorites") },
+                                    onClick = {
+                                        expanded = false
+                                        selectedItem = BottomNavItem.Home
+                                        context.startActivity(Intent(context, FavoritesHostActivity::class.java))
                                     }
                                 )
                                 DropdownMenuItem(
