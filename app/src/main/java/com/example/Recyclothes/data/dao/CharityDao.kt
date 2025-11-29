@@ -24,4 +24,10 @@ interface CharityDao {
 
     @Query("DELETE FROM charities")
     suspend fun clear()
+
+    @Query("SELECT * FROM charities WHERE id = :id LIMIT 1")
+    suspend fun getById(id: Int): CharityEntity?
+
+    @Query("SELECT * FROM charities WHERE id IN (:ids)")
+    suspend fun getByIds(ids: List<Int>): List<CharityEntity>
 }
