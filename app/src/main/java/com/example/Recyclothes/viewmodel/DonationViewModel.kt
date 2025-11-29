@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.Recyclothes.data.local.DonationEntity
+import com.example.Recyclothes.data.local.DraftDonationEntity
 import com.example.Recyclothes.data.model.DonationItem
 import com.example.Recyclothes.data.repository.DonationRepository
 import com.example.Recyclothes.data.repository.UserRepository
@@ -45,6 +46,8 @@ class DonationViewModel(app: Application) : AndroidViewModel(app) {
     val topDonors: StateFlow<List<TopDonor>> = _topDonors.asStateFlow()
 
     private var recentListener: ListenerRegistration? = null
+
+    private var editingDraftId: Long? = null
 
     val availableTags = listOf(
         "Women", "Men", "Kids", "Winter", "Summer",
@@ -128,7 +131,6 @@ class DonationViewModel(app: Application) : AndroidViewModel(app) {
 
         viewModelScope.launch(Dispatchers.IO) {
             if (!net) {
-                // Guardado local inmediato
                 repository.insertPending(localDonation)
 
                 withContext(Dispatchers.Main) {
@@ -173,5 +175,38 @@ class DonationViewModel(app: Application) : AndroidViewModel(app) {
     override fun onCleared() {
         recentListener?.remove()
         super.onCleared()
+    }
+
+    fun loadDraft(id: Long) {
+        viewModelScope.launch {
+            val draft = repository.getDraftById(id)
+            draft?.let {
+                editingDraftId = it.id
+                description.value = it.description
+                clothingType.value = it.clothingType
+                size.value = it.size
+                brand.value = it.brand
+                selectedTags.value = it.tags.split(",")
+            }
+        }
+    }
+
+    fun saveDraft() {
+        val draft = DraftDonationEntity(
+            id = editingDraftId ?: 0,
+            description = description.value.trim(),
+            clothingType = clothingType.value,
+            size = size.value.trim(),
+            brand = brand.value.trim(),
+            tags = selectedTags.value.joinToString(","),
+            userEmail = sessionEmail() ?: ""
+        )
+
+        viewModelScope.launch {
+            if (editingDraftId == null)
+                editingDraftId = repository.insertDraft(draft)
+            else
+                repository.updateDraft(draft)
+        }
     }
 }
