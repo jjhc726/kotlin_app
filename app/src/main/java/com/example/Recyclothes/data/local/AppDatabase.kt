@@ -7,11 +7,11 @@ import androidx.room.RoomDatabase
 import com.example.Recyclothes.data.dao.CharityDao
 import com.example.Recyclothes.data.dao.DonationDao
 import com.example.Recyclothes.data.dao.DonationPointDao
+import com.example.Recyclothes.data.dao.PickupRequestDao
 
-@Database(entities = [DonationPointEntity::class, DonationEntity::class, CharityEntity::class], version = 2, exportSchema = false)
+@Database(entities = [DonationPointEntity::class, DonationEntity::class, CharityEntity::class, PickupRequestEntity::class], version = 2, exportSchema = false)
 
 abstract class AppDatabase : RoomDatabase() {
-    abstract fun donationPointDao(): DonationPointDao
 
     abstract fun charityDao(): CharityDao
 
@@ -32,6 +32,8 @@ abstract class AppDatabase : RoomDatabase() {
     }
 
 
-    abstract fun donationDao(): DonationDao
+    abstract fun donationPointDao(): DonationPointDao
 
+    abstract fun donationDao(): DonationDao
+    abstract fun pickupRequestDao(): PickupRequestDao
 }
