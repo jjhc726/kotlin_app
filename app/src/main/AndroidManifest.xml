@@ -28,6 +28,7 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT"/>
             </intent-filter>
         </service>
+
         <meta-data
             android:name="firebase_messaging_auto_init_enabled"
             android:value="true"/>
@@ -39,7 +40,7 @@
         <activity android:name=".ui.screens.register.RegisterActivity"/>
         <activity android:name=".ui.screens.main.MainNavigationActivity"/>
         <activity android:name=".ui.screens.usagefeatures.UsageFeaturesActivity" />
-
+        <activity android:name=".ui.screens.localdrafts.LocalDraftsActivity" />
 
         <activity
             android:name=".MainActivity"
@@ -50,12 +51,11 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+
         <activity
             android:name=".ui.screens.login.LoginActivity"
             android:exported="true"
-            android:theme="@style/Theme.RecyclothesTheme">
-
-        </activity>
+            android:theme="@style/Theme.RecyclothesTheme"/>
 
     </application>
 </manifest>

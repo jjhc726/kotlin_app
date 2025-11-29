@@ -64,11 +64,13 @@ import androidx.lifecycle.lifecycleScope
 import com.example.Recyclothes.data.model.Charity
 import com.example.Recyclothes.data.model.FeatureId
 import com.example.Recyclothes.data.repository.DonationRepository
+import com.example.Recyclothes.ui.screens.localdrafts.LocalDraftsActivity
 import com.example.Recyclothes.ui.screens.usagefeatures.UsageFeaturesActivity
 import com.example.Recyclothes.utils.NetworkObserver
 import com.example.Recyclothes.utils.UsageTracker
 import com.example.Recyclothes.viewmodel.CharityCatalogViewModel
 import kotlinx.coroutines.launch
+import kotlin.jvm.java
 
 class MainNavigationActivity : ComponentActivity() {
 
@@ -163,6 +165,14 @@ fun MainNavigationScreen() {
                                         context.startActivity(intent)
                                     }
                                 )
+                                DropdownMenuItem(
+                                    text = { Text("Local drafts") },
+                                    onClick = {
+                                        expanded = false
+                                        context.startActivity(Intent(context, LocalDraftsActivity::class.java))
+                                    }
+                                )
+
                             }
                         }
                     }

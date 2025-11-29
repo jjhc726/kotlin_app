@@ -1,11 +1,9 @@
 package com.example.Recyclothes.ui.screens.pickUpAtHome
 
 import android.app.DatePickerDialog
-import android.icu.text.SimpleDateFormat
-import android.icu.util.Calendar
-import android.os.Build
+import java.text.SimpleDateFormat
+import java.util.Calendar
 import android.widget.Toast
-import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -61,10 +59,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.Recyclothes.data.model.DonationPoint
-import com.example.Recyclothes.ui.theme.TealDark
 import com.example.Recyclothes.viewmodel.PickupViewModel
 
-@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PickUpAtHomeScreen(viewModel: PickupViewModel = viewModel()) {
@@ -278,7 +274,6 @@ fun PickUpAtHomeScreen(viewModel: PickupViewModel = viewModel()) {
 }
 
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 private fun DateField(date: String, onDateSelected: (String) -> Unit) {
     val context = LocalContext.current

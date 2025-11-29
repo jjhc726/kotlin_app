@@ -3,6 +3,7 @@ package com.example.Recyclothes.data.repository
 import android.content.Context
 import com.example.Recyclothes.data.local.AppDatabase
 import com.example.Recyclothes.data.local.DonationEntity
+import com.example.Recyclothes.data.local.DraftDonationEntity
 import com.example.Recyclothes.data.model.DonationItem
 import com.example.Recyclothes.data.remote.FirebaseDonationService
 import com.example.Recyclothes.viewmodel.TopDonor
@@ -15,8 +16,12 @@ class DonationRepository(
     context: Context,
     private val service: FirebaseDonationService = FirebaseDonationService()
 ) {
+
     private val db = AppDatabase.getInstance(context)
-    private val dao = db.donationDao()
+
+    private val pendingDao = db.donationDao()
+
+    private val draftDao = db.draftDao()
 
     suspend fun uploadDonation(item: DonationItem, userEmail: String): Boolean {
         return try {
@@ -31,7 +36,7 @@ class DonationRepository(
 
     private suspend fun savePending(item: DonationItem, userEmail: String) {
         withContext(Dispatchers.IO) {
-            dao.insertDonation(
+            pendingDao.insertDonation(
                 DonationEntity(
                     description = item.description,
                     clothingType = item.clothingType,
@@ -45,7 +50,7 @@ class DonationRepository(
     }
 
     suspend fun syncPendingDonations() {
-        val pending = dao.getAll()
+        val pending = pendingDao.getAll()
         for (entity in pending) {
             val item = DonationItem(
                 description = entity.description,
@@ -56,9 +61,13 @@ class DonationRepository(
                 userEmail = entity.userEmail
             )
             val uploaded = service.uploadDonation(item, entity.userEmail)
-            if (uploaded) dao.deleteDonation(entity)
+            if (uploaded) pendingDao.deleteDonation(entity)
         }
     }
+
+    // -------------------------------
+    // FIREBASE QUERIES
+    // -------------------------------
 
     fun listenRecentDonations(
         userEmail: String,
@@ -85,8 +94,27 @@ class DonationRepository(
         return service.getLastDonationTimestamp(userEmail)
     }
 
-    suspend fun insertPending(entity: DonationEntity) {
-        dao.insertDonation(entity)
+    // -------------------------------
+    // BORRADORES (drafts)
+    // -------------------------------
+
+    suspend fun insertDraft(entity: DraftDonationEntity): Long {
+        return draftDao.insertDraft(entity)
     }
 
+    suspend fun updateDraft(entity: DraftDonationEntity) {
+        draftDao.updateDraft(entity)
+    }
+
+    suspend fun getAllDrafts(): List<DraftDonationEntity> {
+        return draftDao.getAllDrafts()
+    }
+
+    suspend fun getDraftById(id: Long): DraftDonationEntity? {
+        return draftDao.getDraftById(id)
+    }
+
+    suspend fun insertPending(donation: DonationEntity) {
+        pendingDao.insertPendingDonation(donation)
+    }
 }
