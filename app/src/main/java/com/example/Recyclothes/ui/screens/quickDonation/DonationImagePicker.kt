@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
@@ -33,9 +34,12 @@ import com.example.Recyclothes.viewmodel.DonationViewModel
 
 @Composable
 fun DonationImagePicker(viewModel: DonationViewModel) {
+
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicturePreview()
-    ) { bitmap -> viewModel.capturedImage.value = bitmap }
+    ) { bitmap ->
+        viewModel.updateImage(bitmap)   // <--- FIX AQUI
+    }
 
     Box(
         modifier = Modifier
@@ -46,7 +50,7 @@ fun DonationImagePicker(viewModel: DonationViewModel) {
             .clickable { cameraLauncher.launch(null) },
         contentAlignment = Alignment.Center
     ) {
-        val capturedImage = viewModel.capturedImage.value
+        val capturedImage = viewModel.capturedImage.collectAsState().value
         if (capturedImage != null) {
             Image(
                 bitmap = capturedImage.asImageBitmap(),

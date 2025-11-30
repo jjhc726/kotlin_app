@@ -4,6 +4,7 @@ import android.app.Application
 import android.graphics.Bitmap
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.example.Recyclothes.data.local.DonationEntity
 import com.example.Recyclothes.data.local.DraftDonationEntity
@@ -11,6 +12,7 @@ import com.example.Recyclothes.data.model.DonationItem
 import com.example.Recyclothes.data.repository.DonationRepository
 import com.example.Recyclothes.data.repository.UserRepository
 import com.example.Recyclothes.utils.NetworkObserver
+import com.example.Recyclothes.utils.PreferenceHelper
 import com.google.firebase.firestore.ListenerRegistration
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,17 +26,77 @@ data class TopDonor(
     val totalDonations: Int
 )
 
-class DonationViewModel(app: Application) : AndroidViewModel(app) {
+class DonationViewModel(
+    app: Application,
+    private val state: SavedStateHandle
+) : AndroidViewModel(app) {
 
     private val repository = DonationRepository(app.applicationContext)
     private val userRepo = UserRepository()
+    private val prefs = PreferenceHelper(app.applicationContext)
 
-    val capturedImage = mutableStateOf<Bitmap?>(null)
-    val description = mutableStateOf("")
-    val clothingType = mutableStateOf("")
-    val size = mutableStateOf("")
-    val brand = mutableStateOf("")
-    val selectedTags = mutableStateOf<List<String>>(emptyList())
+    // Load persistent data
+    val capturedImage = state.getStateFlow<Bitmap?>(
+        "capturedImage",
+        prefs.loadBitmap("capturedImage")
+    )
+    val description = state.getStateFlow(
+        "description",
+        prefs.load("description")
+    )
+    val clothingType = state.getStateFlow(
+        "clothingType",
+        prefs.load("clothingType")
+    )
+    val size = state.getStateFlow(
+        "size",
+        prefs.load("size")
+    )
+    val brand = state.getStateFlow(
+        "brand",
+        prefs.load("brand")
+    )
+    val selectedTags = state.getStateFlow<List<String>>(
+        "selectedTags",
+        prefs.loadList("selectedTags")
+    )
+
+    // Save updates
+    fun updateImage(img: Bitmap?) {
+        state["capturedImage"] = img
+        prefs.saveBitmap("capturedImage", img)
+    }
+
+    fun updateDescription(text: String) {
+        state["description"] = text
+        prefs.save("description", text)
+    }
+
+    fun updateClothingType(text: String) {
+        state["clothingType"] = text
+        prefs.save("clothingType", text)
+    }
+
+    fun updateSize(text: String) {
+        state["size"] = text
+        prefs.save("size", text)
+    }
+
+    fun updateBrand(text: String) {
+        state["brand"] = text
+        prefs.save("brand", text)
+    }
+
+    fun toggleTag(tag: String) {
+        val updated =
+            if (selectedTags.value.contains(tag))
+                selectedTags.value - tag
+            else
+                selectedTags.value + tag
+
+        state.set("selectedTags", updated)
+        prefs.saveList("selectedTags", updated)
+    }
 
     val descriptionError = mutableStateOf<String?>(null)
     val clothingTypeError = mutableStateOf<String?>(null)
@@ -55,14 +117,6 @@ class DonationViewModel(app: Application) : AndroidViewModel(app) {
     )
 
     private fun sessionEmail(): String? = userRepo.currentEmail()
-
-    fun toggleTag(tag: String) {
-        selectedTags.value = if (selectedTags.value.contains(tag)) {
-            selectedTags.value - tag
-        } else {
-            selectedTags.value + tag
-        }
-    }
 
     private fun validateInputs(): String? {
         descriptionError.value = null
@@ -88,14 +142,17 @@ class DonationViewModel(app: Application) : AndroidViewModel(app) {
             if (clothingType.value.isBlank()) "Select a clothing type" else null
         if (clothingTypeError.value != null) return clothingTypeError.value
 
-        sizeError.value = if (size.value.isBlank()) "Size is required" else null
+        sizeError.value =
+            if (size.value.isBlank()) "Size is required" else null
         if (sizeError.value != null) return sizeError.value
 
-        brandError.value = if (brand.value.isBlank()) "Brand is required" else null
+        brandError.value =
+            if (brand.value.isBlank()) "Brand is required" else null
         if (brandError.value != null) return brandError.value
 
         return null
     }
+
     fun uploadDonation(onResult: (Boolean, Boolean, String) -> Unit) {
         val error = validateInputs()
         if (error != null) {
@@ -132,18 +189,21 @@ class DonationViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch(Dispatchers.IO) {
             if (!net) {
                 repository.insertPending(localDonation)
-
                 withContext(Dispatchers.Main) {
+                    clearAll()
                     onResult(true, true, "Donation saved offline.")
                 }
+
                 return@launch
             }
+
 
             try {
                 val uploaded = repository.uploadDonation(donationItem, email)
 
                 withContext(Dispatchers.Main) {
                     if (uploaded) {
+                        clearAll()
                         onResult(true, false, "Donation uploaded successfully.")
                     } else {
                         onResult(true, true, "Donation saved offline.")
@@ -160,7 +220,16 @@ class DonationViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    fun clearAll() {
+        prefs.clearAll()
 
+        state["capturedImage"] = null
+        state["description"] = ""
+        state["clothingType"] = ""
+        state["size"] = ""
+        state["brand"] = ""
+        state["selectedTags"] = emptyList<String>()
+    }
 
     fun loadTopDonors() {
         viewModelScope.launch {
@@ -182,11 +251,11 @@ class DonationViewModel(app: Application) : AndroidViewModel(app) {
             val draft = repository.getDraftById(id)
             draft?.let {
                 editingDraftId = it.id
-                description.value = it.description
-                clothingType.value = it.clothingType
-                size.value = it.size
-                brand.value = it.brand
-                selectedTags.value = it.tags.split(",")
+                state["description"] = it.description
+                state["clothingType"] = it.clothingType
+                state["size"] = it.size
+                state["brand"] = it.brand
+                state["selectedTags"] = it.tags.split(",")
             }
         }
     }
