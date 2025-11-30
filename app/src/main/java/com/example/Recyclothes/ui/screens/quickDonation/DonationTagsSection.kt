@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -19,12 +20,19 @@ import com.example.Recyclothes.viewmodel.DonationViewModel
 
 @Composable
 fun DonationTagsSection(viewModel: DonationViewModel) {
+
+    val selectedTagsState = viewModel.selectedTags.collectAsState()
+
+    val selectedTags = selectedTagsState.value
+
     FlowRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         viewModel.availableTags.forEach { tag ->
-            val isSelected = viewModel.selectedTags.value.contains(tag)
+
+            val isSelected = selectedTags.contains(tag)
+
             Text(
                 text = tag,
                 color = if (isSelected) Color.White else TealDark,

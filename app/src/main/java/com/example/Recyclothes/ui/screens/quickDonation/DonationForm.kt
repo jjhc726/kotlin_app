@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -26,10 +27,14 @@ import com.example.Recyclothes.viewmodel.DonationViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DonationForm(viewModel: DonationViewModel) {
+
+    // DESCRIPTION
+    val description by viewModel.description.collectAsState()
+
     OutlinedTextField(
-        value = viewModel.description.value,
+        value = description,
         onValueChange = {
-            if (it.length <= 200) viewModel.description.value = it
+            if (it.length <= 200) viewModel.updateDescription(it)
         },
         label = { Text("Description (Required)", color = DeepBlue.copy(alpha = 0.6f)) },
         supportingText = {
@@ -52,12 +57,17 @@ fun DonationForm(viewModel: DonationViewModel) {
 
     Spacer(modifier = Modifier.height(12.dp))
 
+    // CLOTHING TYPE
     var expandedType by remember { mutableStateOf(false) }
     val clothingOptions = listOf("Shirt", "Pants", "Jacket", "Dress", "Shoes", "Accessories")
+    val clothingType by viewModel.clothingType.collectAsState()
 
-    ExposedDropdownMenuBox(expanded = expandedType, onExpandedChange = { expandedType = !expandedType }) {
+    ExposedDropdownMenuBox(
+        expanded = expandedType,
+        onExpandedChange = { expandedType = !expandedType }
+    ) {
         OutlinedTextField(
-            value = viewModel.clothingType.value,
+            value = clothingType,
             onValueChange = {},
             readOnly = true,
             label = { Text("Clothing Type (Required)", color = DeepBlue.copy(alpha = 0.6f)) },
@@ -90,7 +100,7 @@ fun DonationForm(viewModel: DonationViewModel) {
                 DropdownMenuItem(
                     text = { Text(option, color = DeepBlue) },
                     onClick = {
-                        viewModel.clothingType.value = option
+                        viewModel.updateClothingType(option)
                         expandedType = false
                     },
                     modifier = Modifier.background(Color.White)
@@ -101,12 +111,17 @@ fun DonationForm(viewModel: DonationViewModel) {
 
     Spacer(modifier = Modifier.height(12.dp))
 
+    // SIZE
     var expandedSize by remember { mutableStateOf(false) }
     val sizeOptions = listOf("XS", "S", "M", "L", "XL", "XXL")
+    val size by viewModel.size.collectAsState()
 
-    ExposedDropdownMenuBox(expanded = expandedSize, onExpandedChange = { expandedSize = !expandedSize }) {
+    ExposedDropdownMenuBox(
+        expanded = expandedSize,
+        onExpandedChange = { expandedSize = !expandedSize }
+    ) {
         OutlinedTextField(
-            value = viewModel.size.value,
+            value = size,
             onValueChange = {},
             readOnly = true,
             label = { Text("Size (Required)", color = DeepBlue.copy(alpha = 0.6f)) },
@@ -139,7 +154,7 @@ fun DonationForm(viewModel: DonationViewModel) {
                 DropdownMenuItem(
                     text = { Text(option, color = DeepBlue) },
                     onClick = {
-                        viewModel.size.value = option
+                        viewModel.updateSize(option)
                         expandedSize = false
                     },
                     modifier = Modifier.background(Color.White)
@@ -150,9 +165,12 @@ fun DonationForm(viewModel: DonationViewModel) {
 
     Spacer(modifier = Modifier.height(12.dp))
 
+    // BRAND
+    val brand by viewModel.brand.collectAsState()
+
     OutlinedTextField(
-        value = viewModel.brand.value,
-        onValueChange = { if (it.length <= 40) viewModel.brand.value = it },
+        value = brand,
+        onValueChange = { if (it.length <= 40) viewModel.updateBrand(it) },
         label = { Text("Brand (Required)", color = DeepBlue.copy(alpha = 0.6f)) },
         supportingText = { viewModel.brandError.value?.let { Text(it, color = Color.Red) } },
         modifier = Modifier.fillMaxWidth(),
