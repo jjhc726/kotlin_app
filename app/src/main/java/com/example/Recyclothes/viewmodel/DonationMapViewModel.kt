@@ -20,6 +20,7 @@ import kotlinx.coroutines.withContext
 import androidx.lifecycle.viewModelScope
 import android.annotation.SuppressLint
 import android.os.Looper
+import android.util.LruCache
 import com.google.android.gms.location.*
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async
@@ -32,6 +33,8 @@ class DonationMapViewModel(
 
     private val repository = CharitiesRepository(getApplication())
     private val networkObserver = NetworkObserver(getApplication())
+
+    private val filterCache = object : LruCache<String, List<DonationPoint>>(50) {}
 
     private val fusedLocationClient =
         LocationServices.getFusedLocationProviderClient(getApplication<Application>().applicationContext)
@@ -161,7 +164,19 @@ class DonationMapViewModel(
     }
 
     fun updateFilters() {
-        visiblePoints.value = applyFilters(allPoints.value)
+        val key = "${cause.value}|${access.value}|${schedule.value}"
+
+        val cached = filterCache.get(key)
+        if (cached != null) {
+            visiblePoints.value = cached
+            findAndShowClosestPoint()
+            return
+        }
+
+        val filtered = applyFilters(allPoints.value)
+        filterCache.put(key, filtered)
+
+        visiblePoints.value = filtered
         findAndShowClosestPoint()
     }
     private val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5000L)
