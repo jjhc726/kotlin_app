@@ -24,7 +24,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.CloudOff
@@ -110,6 +112,7 @@ fun PickUpAtHomeScreen(viewModel: PickupViewModel = viewModel()) {
             Column(
                 Modifier
                     .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
                     .padding(padding)
                     .padding(16.dp)
             ) {
@@ -144,6 +147,76 @@ fun PickUpAtHomeScreen(viewModel: PickupViewModel = viewModel()) {
                 )
 
                 Spacer(Modifier.height(60.dp))
+
+                Button(
+                    onClick = {
+                        val userEmail = viewModel.getCurrentUserEmail()
+
+                        if (address.isBlank()) {
+                            Toast.makeText(context, "Please enter your address", Toast.LENGTH_SHORT)
+                                .show()
+                            return@Button
+                        }
+                        if (date.isBlank()) {
+                            Toast.makeText(context, "Please select a date", Toast.LENGTH_SHORT)
+                                .show()
+                            return@Button
+                        }
+                        if (hour.isBlank()) {
+                            Toast.makeText(context, "Please select a time", Toast.LENGTH_SHORT)
+                                .show()
+                            return@Button
+                        }
+                        if (cause.isBlank()) {
+                            Toast.makeText(context, "Please select a cause", Toast.LENGTH_SHORT)
+                                .show()
+                            return@Button
+                        }
+                        if (selectedFoundation.isNullOrBlank()) {
+                            Toast.makeText(
+                                context,
+                                "Please select a foundation",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            return@Button
+                        }
+
+                        showLoading = true
+
+                        viewModel.submitPickup(
+                            foundationId = selectedFoundation!!,
+                            userId = userEmail,
+                            onNoConnection = {
+                                showLoading = false
+                                viewModel.resetForm()
+                                selectedFoundation = null
+                                showOfflineDialog = true
+                            },
+                            onFinished = {
+                                showLoading = false
+                                viewModel.resetForm()
+                                selectedFoundation = null
+                                Toast.makeText(
+                                    context,
+                                    "Pickup created successfully",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
+                        )
+                        viewModel.onPickupAtHomeSelected()
+                    },
+
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    enabled = !showLoading,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF1B454B),
+                        contentColor = Color.White
+                    )
+                ) {
+                    Text("Confirm Pickup")
+                }
             }
             AnimatedVisibility(
                 visible = !networkAvailable && !bannerDismissed.value,
@@ -182,76 +255,6 @@ fun PickUpAtHomeScreen(viewModel: PickupViewModel = viewModel()) {
                         )
                     }
                 }
-            }
-            Button(
-                onClick = {
-                    val userEmail = viewModel.getCurrentUserEmail()
-
-                    if (address.isBlank()) {
-                        Toast.makeText(context, "Please enter your address", Toast.LENGTH_SHORT)
-                            .show()
-                        return@Button
-                    }
-                    if (date.isBlank()) {
-                        Toast.makeText(context, "Please select a date", Toast.LENGTH_SHORT)
-                            .show()
-                        return@Button
-                    }
-                    if (hour.isBlank()) {
-                        Toast.makeText(context, "Please select a time", Toast.LENGTH_SHORT)
-                            .show()
-                        return@Button
-                    }
-                    if (cause.isBlank()) {
-                        Toast.makeText(context, "Please select a cause", Toast.LENGTH_SHORT)
-                            .show()
-                        return@Button
-                    }
-                    if (selectedFoundation.isNullOrBlank()) {
-                        Toast.makeText(
-                            context,
-                            "Please select a foundation",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        return@Button
-                    }
-
-                    showLoading = true
-
-                    viewModel.submitPickup(
-                        foundationId = selectedFoundation!!,
-                        userId = userEmail,
-                        onNoConnection = {
-                            showLoading = false
-                            viewModel.resetForm()
-                            selectedFoundation = null
-                            showOfflineDialog = true
-                        },
-                        onFinished = {
-                            showLoading = false
-                            viewModel.resetForm()
-                            selectedFoundation = null
-                            Toast.makeText(
-                                context,
-                                "Pickup created successfully",
-                                Toast.LENGTH_LONG
-                            ).show()
-                        }
-                    )
-                    viewModel.onPickupAtHomeSelected()
-                },
-
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                enabled = !showLoading,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF1B454B),
-                    contentColor = Color.White
-                )
-            ) {
-                Text("Confirm Pickup")
             }
             }
 
