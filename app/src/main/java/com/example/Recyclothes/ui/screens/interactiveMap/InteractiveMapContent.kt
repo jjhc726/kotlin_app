@@ -35,12 +35,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.example.Recyclothes.data.repository.MapTelemetryRepository
 import com.example.Recyclothes.ui.theme.DeepBlue
 import com.example.Recyclothes.ui.theme.White
 import com.example.Recyclothes.viewmodel.DonationMapViewModel
@@ -52,14 +55,15 @@ import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.MarkerInfoWindow
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 
 @Composable
 fun InteractiveMapContent(
     viewModel: DonationMapViewModel,
     hasPermission: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    mapEventId: String
 ) {
     val bogota = LatLng(4.7110, -74.0721)
     val cameraPositionState = rememberCameraPositionState {
@@ -71,9 +75,13 @@ fun InteractiveMapContent(
     val currentnearestPoint by viewModel.currentnearestPoint
     val isMapBlocked by viewModel.isMapBlocked
     val hasNetwork by viewModel.hasNetwork
+    val userLocation by viewModel.userLocation
+    val mapTelemetryRepo = remember { MapTelemetryRepository() }
+    val coroutineScope = rememberCoroutineScope()
+
+
 
     val markerStates = remember(visiblePoints) { mutableMapOf<String, MarkerState>() }
-    val markersCreatedCount = remember { mutableIntStateOf(0) }
     var isMapLoaded by remember { mutableStateOf(false) }
 
     val showOfflineBanner = remember(hasNetwork, isMapBlocked, visiblePoints) {
@@ -98,28 +106,10 @@ fun InteractiveMapContent(
         }
     }
 
-    LaunchedEffect(isMapLoaded, markersCreatedCount.intValue, visiblePoints, currentnearestPoint?.id) {
-        if (!isMapLoaded) return@LaunchedEffect
-        if (visiblePoints.isEmpty()) return@LaunchedEffect
-        if (markersCreatedCount.intValue < visiblePoints.size) return@LaunchedEffect
-
-        delay(100)
-
+    LaunchedEffect(userLocation, visiblePoints, isMapLoaded) {
         viewModel.findAndShowClosestPoint()
 
-        val nearest = viewModel.currentnearestPoint.value ?: return@LaunchedEffect
-
-        var attempts = 0
-        val maxAttempts = 10
-        while (!markerStates.containsKey(nearest.id) && attempts < maxAttempts) {
-            delay(50)
-            attempts++
-        }
-
-        markerStates[nearest.id]?.let { ms ->
-            ms.showInfoWindow()
-            viewModel.selectedMarkerState.value = ms
-        }
+        markerStates[currentnearestPoint?.id]?.showInfoWindow()
     }
 
 
@@ -169,7 +159,11 @@ fun InteractiveMapContent(
                             zoomControlsEnabled = true,
                             myLocationButtonEnabled = true
                         ),
-                        onMapLoaded = { isMapLoaded = true },
+                        onMapLoaded = { coroutineScope.launch {
+                            mapTelemetryRepo.endEvent(mapEventId)
+                        }
+                            isMapLoaded = true },
+
                     ) {
                         visiblePoints.forEach { p ->
                             val markerState = remember(p.id) { MarkerState(position = p.position) }
@@ -206,9 +200,6 @@ fun InteractiveMapContent(
                                     }
                                 }
                             }
-                        }
-                        SideEffect {
-                            markersCreatedCount.intValue = markerStates.size
                         }
                     }
                 } else {

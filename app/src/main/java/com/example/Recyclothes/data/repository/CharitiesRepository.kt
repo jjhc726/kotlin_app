@@ -28,15 +28,5 @@ class CharitiesRepository(
                 dao.getAll().map { it.toDomain() }
             }
         }
-
-    suspend fun refreshRemoteAndCache(): List<DonationPoint> {
-            val remote = withContext(Dispatchers.IO) {
-                service.getAllDonationPoints()
-            }
-            withContext(Dispatchers.IO) {
-                dao.insertAll(remote.map { it.toEntity() })
-            }
-            return remote
-        }
     }
 
