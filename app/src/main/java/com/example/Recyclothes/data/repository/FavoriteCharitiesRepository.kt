@@ -5,6 +5,7 @@ import com.example.Recyclothes.data.local.AppDatabase
 import com.example.Recyclothes.data.local.FavoriteCharityEntity
 import com.example.Recyclothes.data.local.FavoriteOpEntity
 import com.example.Recyclothes.data.remote.FavoriteRemoteDataSource
+import com.example.Recyclothes.data.remote.FavoriteStat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -22,11 +23,8 @@ class FavoriteCharitiesRepository(
         favDao.observeFavorites().map { list -> list.map(FavoriteCharityEntity::charityId).toSet() }
 
     suspend fun getFavoriteCharities(ids: Set<Int>) = withContext(Dispatchers.IO) {
-        if (ids.isEmpty()) emptyList()
-        else charityDao.getByIds(ids.toList())
+        if (ids.isEmpty()) emptyList() else charityDao.getByIds(ids.toList())
     }
-
-
 
     suspend fun toggleFavorite(id: Int) = withContext(Dispatchers.IO) {
         val now = System.currentTimeMillis()
@@ -39,7 +37,9 @@ class FavoriteCharitiesRepository(
         }
     }
 
+    suspend fun top3(): List<FavoriteStat> = withContext(Dispatchers.IO) { remote.top3() }
 
-
-    suspend fun top3(): List<Pair<Int, Long>> = withContext(Dispatchers.IO) { remote.top3() }
+    suspend fun getCharityName(id: Int): String? = withContext(Dispatchers.IO) {
+        charityDao.getById(id)?.name
+    }
 }
