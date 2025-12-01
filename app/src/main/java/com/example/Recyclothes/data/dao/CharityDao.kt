@@ -19,6 +19,9 @@ interface CharityDao {
     @Query("SELECT MIN(cachedAt) FROM charities")
     suspend fun minCachedAt(): Long?
 
+    @Query("SELECT MAX(cachedAt) FROM charities")
+    suspend fun lastCacheTs(): Long?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertAll(items: List<CharityEntity>)
 

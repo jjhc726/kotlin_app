@@ -3,8 +3,9 @@ package com.example.Recyclothes.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.Recyclothes.data.repository.FavoriteCharitiesRepository
 import com.example.Recyclothes.data.local.CharityEntity
+import com.example.Recyclothes.data.remote.FavoriteStat
+import com.example.Recyclothes.data.repository.FavoriteCharitiesRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -17,22 +18,19 @@ class FavoritesViewModel(app: Application) : AndroidViewModel(app) {
     private val _favorites = MutableStateFlow<List<CharityEntity>>(emptyList())
     val favorites: StateFlow<List<CharityEntity>> = _favorites
 
-    private val _top3 = MutableStateFlow<List<Pair<CharityEntity, Long>>>(emptyList())
+    private val _top3 = MutableStateFlow<List<FavoriteStat>>(emptyList())
+    val top3: StateFlow<List<FavoriteStat>> = _top3
+
+    private val nameCache = mutableMapOf<Int, String>()
 
     init {
         viewModelScope.launch {
             repo.observeFavoriteIds().collectLatest { ids ->
-                val list = repo.getFavoriteCharities(ids)
-                _favorites.value = list
+                _favorites.value = repo.getFavoriteCharities(ids)
             }
         }
         viewModelScope.launch {
-            val pairs = repo.top3()
-            val entities = repo.getFavoriteCharities(pairs.map { it.first }.toSet())
-            val map = entities.associateBy { it.id }
-            _top3.value = pairs.mapNotNull { (id, count) ->
-                map[id]?.let { it to count }
-            }
+            _top3.value = repo.top3()
         }
     }
 
@@ -40,5 +38,10 @@ class FavoritesViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch { repo.toggleFavorite(id) }
     }
 
-
+    suspend fun resolveName(id: Int): String {
+        nameCache[id]?.let { return it }
+        val name = repo.getCharityName(id) ?: "Charity #$id"
+        nameCache[id] = name
+        return name
+    }
 }
