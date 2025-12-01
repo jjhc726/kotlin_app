@@ -194,6 +194,7 @@ fun ScheduleDonationDesign(
                         Toast.makeText(ctx, err, Toast.LENGTH_LONG).show()
                     }
                 )
+                vm.onScheduleDonationSelected()
             },
             colors = ButtonDefaults.buttonColors(containerColor = DeepBlue, contentColor = Color.White),
             shape = androidx.compose.foundation.shape.RoundedCornerShape(6.dp),

@@ -1,6 +1,8 @@
 package com.example.Recyclothes.ui.screens.pickUpAtHome
 
+import android.app.Activity
 import android.app.DatePickerDialog
+import android.content.Intent
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import android.widget.Toast
@@ -59,6 +61,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.Recyclothes.data.model.DonationPoint
+import com.example.Recyclothes.ui.screens.main.MainNavigationActivity
 import com.example.Recyclothes.viewmodel.PickupViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -220,10 +223,14 @@ fun PickUpAtHomeScreen(viewModel: PickupViewModel = viewModel()) {
                         userId = userEmail,
                         onNoConnection = {
                             showLoading = false
+                            viewModel.resetForm()
+                            selectedFoundation = null
                             showOfflineDialog = true
                         },
                         onFinished = {
                             showLoading = false
+                            viewModel.resetForm()
+                            selectedFoundation = null
                             Toast.makeText(
                                 context,
                                 "Pickup created successfully",
@@ -231,6 +238,7 @@ fun PickUpAtHomeScreen(viewModel: PickupViewModel = viewModel()) {
                             ).show()
                         }
                     )
+                    viewModel.onPickupAtHomeSelected()
                 },
 
                 modifier = Modifier
@@ -247,17 +255,15 @@ fun PickUpAtHomeScreen(viewModel: PickupViewModel = viewModel()) {
             }
             }
 
-            // Blocking loading dialog
             if (showLoading) {
                 AlertDialog(
-                    onDismissRequest = { /* blocked */ },
+                    onDismissRequest = { },
                     title = { Text("Processing") },
                     text = { CircularProgressIndicator(modifier = Modifier.padding(8.dp)) },
                     confirmButton = {}
                 )
             }
 
-            // Offline confirmation dialog when user pressed confirm but no connection
             if (showOfflineDialog) {
                 AlertDialog(
                     onDismissRequest = { showOfflineDialog = false },

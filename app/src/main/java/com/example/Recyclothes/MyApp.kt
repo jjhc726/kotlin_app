@@ -1,33 +1,41 @@
 package com.example.Recyclothes
 
 import android.app.Application
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import com.example.Recyclothes.data.repository.PickupRepository
 import com.example.Recyclothes.utils.NetworkObserver
+import com.example.Recyclothes.utils.SyncPickupWorker
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
 class MyApp : Application() {
-
-    private lateinit var networkObserver: NetworkObserver
-    private lateinit var pickupRepo: PickupRepository
-
-    @OptIn(DelicateCoroutinesApi::class)
     override fun onCreate() {
         super.onCreate()
 
-
-        networkObserver = NetworkObserver(this)
-        pickupRepo = PickupRepository(this)
+        val networkObserver = NetworkObserver(this)
 
         networkObserver.registerCallback(
             onAvailable = {
-                GlobalScope.launch(Dispatchers.IO) {
-                    pickupRepo.syncPendingRequests()
-                }
+                enqueuePickupSyncWork()
             },
-            onLost = { }
+            onLost = {}
+        )
+    }
+
+    private fun enqueuePickupSyncWork() {
+        val request = OneTimeWorkRequestBuilder<SyncPickupWorker>().build()
+
+        WorkManager.getInstance(this).enqueueUniqueWork(
+            "pickup_sync_work",
+            ExistingWorkPolicy.KEEP,
+            request
         )
     }
 }
+
+
+
