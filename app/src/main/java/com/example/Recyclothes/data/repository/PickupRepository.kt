@@ -3,23 +3,17 @@ package com.example.Recyclothes.data.repository
 import android.content.Context
 import com.example.Recyclothes.data.local.AppDatabase
 import com.example.Recyclothes.data.local.PickupRequestEntity
-import com.example.Recyclothes.data.remote.FirebaseCharitiesService
-import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.tasks.await
-
+import com.example.Recyclothes.data.remote.FirebasePickupService
 class PickupRepository(
     context: Context,
-    private val service: FirebaseCharitiesService = FirebaseCharitiesService()
+    private val remote: FirebasePickupService = FirebasePickupService()
 ) {
 
     private val db = AppDatabase.getInstance(context)
     private val pickupDao = db.pickupRequestDao()
 
-
     suspend fun sendPickupOnline(request: PickupRequestEntity) {
-        val firestore = FirebaseFirestore.getInstance()
-        // write the entity as a map or object; Firestore will serialize fields
-        firestore.collection("Pickups").add(request).await()
+        remote.sendPickup(request)
     }
 
     suspend fun savePickupOffline(request: PickupRequestEntity) {
@@ -28,10 +22,9 @@ class PickupRepository(
 
     suspend fun syncPendingRequests() {
         val pending = pickupDao.getPendingRequests()
-        val firestore = FirebaseFirestore.getInstance()
 
         pending.forEach { req ->
-            firestore.collection("Pickups").add(req).await()
+            remote.sendPickup(req)
             pickupDao.markAsSynced(req.localId)
         }
     }

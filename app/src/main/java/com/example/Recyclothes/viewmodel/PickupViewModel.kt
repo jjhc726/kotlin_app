@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.Recyclothes.data.local.PickupRequestEntity
 import com.example.Recyclothes.data.model.DonationPoint
 import com.example.Recyclothes.data.repository.CharitiesRepository
+import com.example.Recyclothes.data.repository.EngagementRepository
 import com.example.Recyclothes.data.repository.PickupRepository
 import com.example.Recyclothes.data.repository.UserRepository
 import com.example.Recyclothes.utils.NetworkObserver
@@ -32,6 +33,9 @@ class PickupViewModel(application: Application) : AndroidViewModel(application) 
 
     private val repo = PickupRepository(application)
     private val charitiesRepo = CharitiesRepository(application)
+
+    private val engagementRepo = EngagementRepository()
+
     private val network = NetworkObserver(application)
 
     private val userRepo = UserRepository()
@@ -41,7 +45,6 @@ class PickupViewModel(application: Application) : AndroidViewModel(application) 
     val hour = MutableStateFlow("")
     val cause = MutableStateFlow("")
 
-    // raw charities cache
     private val _charities = MutableStateFlow<List<DonationPoint>>(emptyList())
     fun filteredCharities(): StateFlow<List<DonationPoint>> =
         _charities.combine(cause) { list, c -> list.filter { it.cause.equals(c, ignoreCase = true) } }
@@ -51,10 +54,7 @@ class PickupViewModel(application: Application) : AndroidViewModel(application) 
     private val _networkStatus = MutableStateFlow(network.isOnline())
     val networkStatus: StateFlow<Boolean> = _networkStatus.asStateFlow()
 
-    // network events for UI snackbars
     private val _networkEvents = MutableSharedFlow<NetworkEvent>(replay = 1)
-    val networkEvents = _networkEvents.asSharedFlow()
-
     private var networkCallback: ConnectivityManager.NetworkCallback? = null
 
     fun loadCharities() {
@@ -134,4 +134,18 @@ class PickupViewModel(application: Application) : AndroidViewModel(application) 
             }
         }
     }
+
+    fun onPickupAtHomeSelected() {
+        viewModelScope.launch {
+            engagementRepo.logPickupAtHome()
+        }
+    }
+
+    fun resetForm() {
+        address.value = ""
+        date.value = ""
+        hour.value = ""
+        cause.value = ""
+    }
+
 }

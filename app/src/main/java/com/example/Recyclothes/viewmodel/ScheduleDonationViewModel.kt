@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.Recyclothes.data.remote.ScheduledDonationDto
+import com.example.Recyclothes.data.repository.EngagementRepository
 import com.example.Recyclothes.data.repository.OfflineScheduledDonationRepository
 import com.example.Recyclothes.data.repository.ScheduleDonationRepository
 import kotlinx.coroutines.launch
@@ -33,6 +34,9 @@ class ScheduleDonationViewModel(app: Application) : AndroidViewModel(app) {
 
     private val onlineRepo = ScheduleDonationRepository()
     private val offlineRepo = OfflineScheduledDonationRepository(app)
+
+    private val engagementRepo = EngagementRepository()
+
 
     private fun sessionEmail(): String? =
         FirebaseAuth.getInstance().currentUser?.email
@@ -112,6 +116,12 @@ class ScheduleDonationViewModel(app: Application) : AndroidViewModel(app) {
                 brand = brand.value
             )
             onQueuedOffline("No connectivity. Saved offline and will sync later.")
+        }
+    }
+
+    fun onScheduleDonationSelected() {
+        viewModelScope.launch {
+            engagementRepo.logScheduleDonation()
         }
     }
 }
