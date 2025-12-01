@@ -1,30 +1,12 @@
 package com.example.Recyclothes.ui.screens.login
 
 import android.content.Intent
+import android.widget.Toast
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -39,28 +21,95 @@ import com.example.Recyclothes.ui.theme.TealMedium
 
 @Composable
 fun LoginScreen(
-    onLogin: (String, String) -> Unit, supportsBiometric: Boolean, onBiometricClick: () -> Unit
+    onLogin: (String, String) -> Unit,
+    supportsBiometric: Boolean,
+    onBiometricClick: () -> Unit,
+    isOnline: Boolean,
+    justLostConnection: Boolean,
+    justRegainedConnection: Boolean
 ) {
     val context = LocalContext.current
+
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
+    var showBanner by remember { mutableStateOf(false) }
+    var bannerText by remember { mutableStateOf("") }
+
+    // ---- Manejo de conexión ----
+    LaunchedEffect(Unit) {
+        if (!isOnline) {
+            bannerText = "No tienes conexión a internet"
+            showBanner = true
+        }
+    }
+
+    LaunchedEffect(justLostConnection) {
+        if (justLostConnection) {
+            bannerText = "No tienes conexión a internet"
+            showBanner = true
+        }
+    }
+
+    LaunchedEffect(justRegainedConnection) {
+        if (justRegainedConnection) {
+            bannerText = "Conectado nuevamente"
+            showBanner = true
+            kotlinx.coroutines.delay(2500)
+            if (isOnline) showBanner = false
+        }
+    }
+
+    LaunchedEffect(isOnline) {
+        if (isOnline) {
+            bannerText = "Conectado nuevamente"
+            showBanner = true
+            kotlinx.coroutines.delay(2500)
+            showBanner = false
+        }
+    }
+
     Box(
-        modifier = Modifier
+        Modifier
             .fillMaxSize()
-            .background(DeepBlue), contentAlignment = Alignment.Center
+            .background(DeepBlue)
     ) {
+
+        // ---- Banner superior ----
+        androidx.compose.animation.AnimatedVisibility(
+            visible = showBanner,
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(top = 16.dp)
+        ) {
+            Box(
+                Modifier
+                    .background(
+                        if (bannerText.contains("Conectado")) Color(0xFF00C853) else Color.Red,
+                        RoundedCornerShape(12.dp)
+                    )
+                    .padding(horizontal = 20.dp, vertical = 10.dp)
+            ) {
+                Text(text = bannerText, color = Color.White)
+            }
+        }
+
+        // ---- Contenido principal ----
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
+                .align(Alignment.Center)
                 .padding(24.dp)
                 .background(
-                    color = SoftBlue.copy(alpha = 0.9f), shape = RoundedCornerShape(24.dp)
+                    color = SoftBlue.copy(alpha = 0.9f),
+                    shape = RoundedCornerShape(24.dp)
                 )
                 .padding(24.dp)
         ) {
             Text(
-                text = "Welcome", style = MaterialTheme.typography.headlineMedium, color = DeepBlue
+                "Welcome",
+                style = MaterialTheme.typography.headlineMedium,
+                color = DeepBlue
             )
 
             Spacer(Modifier.height(16.dp))
@@ -69,16 +118,7 @@ fun LoginScreen(
                 value = email,
                 onValueChange = { email = it },
                 label = { Text("Email", color = Color.DarkGray) },
-                modifier = Modifier.fillMaxWidth(),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = DeepBlue,
-                    unfocusedBorderColor = DeepBlue,
-                    focusedLabelColor = DeepBlue,
-                    unfocusedLabelColor = DeepBlue,
-                    cursorColor = DeepBlue,
-                    focusedTextColor = Color.DarkGray,
-                    unfocusedTextColor = Color.DarkGray
-                )
+                modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(Modifier.height(12.dp))
@@ -88,30 +128,24 @@ fun LoginScreen(
                 onValueChange = { password = it },
                 label = { Text("Password", color = Color.DarkGray) },
                 visualTransformation = PasswordVisualTransformation(),
-                modifier = Modifier.fillMaxWidth(),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = DeepBlue,
-                    unfocusedBorderColor = DeepBlue,
-                    focusedLabelColor = DeepBlue,
-                    unfocusedLabelColor = DeepBlue,
-                    cursorColor = DeepBlue,
-                    focusedTextColor = Color.DarkGray,
-                    unfocusedTextColor = Color.DarkGray
-                )
+                modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(Modifier.height(16.dp))
 
+            // -------- BIOMETRÍA --------
             if (supportsBiometric) {
                 OutlinedButton(
-                    onClick = onBiometricClick,
+                    onClick = {
+                        if (!isOnline) {
+                            Toast.makeText(context, "No tienes internet", Toast.LENGTH_SHORT).show()
+                        } else onBiometricClick()
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
                     shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = DeepBlue
-                    )
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = DeepBlue)
                 ) {
                     Text("Sign in with fingerprint")
                 }
@@ -121,8 +155,13 @@ fun LoginScreen(
                 Spacer(Modifier.height(8.dp))
             }
 
+            // -------- BOTÓN LOGIN NORMAL --------
             Button(
-                onClick = { onLogin(email, password) },
+                onClick = {
+                    if (!isOnline) {
+                        Toast.makeText(context, "No tienes internet", Toast.LENGTH_SHORT).show()
+                    } else onLogin(email, password)
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
@@ -134,31 +173,20 @@ fun LoginScreen(
 
             Spacer(Modifier.height(30.dp))
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column {
-                    Text("Don't have an account?", color = DeepBlue, fontSize = 12.sp)
-                }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text("Don't have an account?", color = DeepBlue, fontSize = 12.sp)
 
-                Column {
-                    TextButton(
-                        onClick = {
-                            context.startActivity(
-                                Intent(
-                                    context, RegisterActivity::class.java
-                                )
-                            )
-                        },
-                        modifier = Modifier
-                            .width(120.dp)
-                            .height(40.dp)
-                            .align(Alignment.CenterHorizontally),
-                    ) {
-                        Text("Register Now", fontSize = 12.sp, color = DeepBlue)
+                TextButton(
+                    onClick = {
+                        context.startActivity(Intent(context, RegisterActivity::class.java))
                     }
+                ) {
+                    Text("Register Now", fontSize = 12.sp, color = DeepBlue)
                 }
             }
-
-
         }
     }
 }

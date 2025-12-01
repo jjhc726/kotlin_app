@@ -6,16 +6,22 @@ import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.lifecycle.lifecycleScope
 import com.example.Recyclothes.ui.screens.main.MainNavigationActivity
 import com.example.Recyclothes.ui.theme.RecyclothesTheme
 import com.example.Recyclothes.utils.BiometricHelper
 import com.example.Recyclothes.viewmodel.LoginViewModel
+import com.example.Recyclothes.viewmodel.NetworkViewModel
+
 import kotlinx.coroutines.launch
 
 class LoginActivity : AppCompatActivity() {
 
     private val viewModel: LoginViewModel by viewModels()
+
+    private val networkViewModel: NetworkViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -24,6 +30,11 @@ class LoginActivity : AppCompatActivity() {
 
         setContent {
             RecyclothesTheme {
+
+                val online by networkViewModel.isOnline.collectAsState()
+                val lost by networkViewModel.justLostConnection.collectAsState()
+                val regained by networkViewModel.justRegainedConnection.collectAsState()
+
                 LoginScreen(
                     onLogin = { email, password ->
                         lifecycleScope.launch {
@@ -33,7 +44,14 @@ class LoginActivity : AppCompatActivity() {
                         }
                     },
                     supportsBiometric = biometricHelper.canUseBiometricOrCredential(),
-                    onBiometricClick = { biometricHelper.showBiometricPrompt { goToHome() } }
+                    onBiometricClick = {
+                        if (!online) {
+                            Toast.makeText(this, "No tienes internet", Toast.LENGTH_SHORT).show()
+                        } else biometricHelper.showBiometricPrompt { goToHome() }
+                    },
+                    isOnline = online,
+                    justLostConnection = lost,
+                    justRegainedConnection = regained
                 )
             }
         }
