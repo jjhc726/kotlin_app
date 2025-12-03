@@ -11,9 +11,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.Recyclothes.connectivity.ConnectivityBanner
+import com.example.Recyclothes.connectivity.ConnectivityObserver
 import com.example.Recyclothes.data.model.FeatureId
 import com.example.Recyclothes.ui.screens.main.MainNavigationActivity
 import com.example.Recyclothes.ui.theme.DeepBlue
@@ -22,22 +25,25 @@ import com.example.Recyclothes.ui.theme.SoftBlue
 import com.example.Recyclothes.ui.theme.TealDark
 import com.example.Recyclothes.viewmodel.LeastUsedUi
 import com.example.Recyclothes.viewmodel.UsageFeaturesViewModel
-import androidx.compose.ui.platform.LocalContext
-import com.example.Recyclothes.connectivity.ConnectivityBanner
+import com.example.Recyclothes.viewmodel.FeaturesUsageViewModel
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
-fun UsageFeaturesScreen(vm: UsageFeaturesViewModel = viewModel()) {
-    LaunchedEffect(Unit) { vm.loadLeastUsedThisWeek() }
+fun UsageFeaturesScreen(
+    analyticsVm: UsageFeaturesViewModel = viewModel(),
+    eventsVm: FeaturesUsageViewModel = viewModel()
+) {
+    LaunchedEffect(Unit) { analyticsVm.loadLeastUsedThisWeek() }
 
-    val least by vm.leastUsed.collectAsState()
-    val submitting by vm.submitting.collectAsState()
-    val submittedOk by vm.submittedOk.collectAsState()
-
+    val least by analyticsVm.leastUsed.collectAsState()
     val ctx = LocalContext.current
 
-    val observer = remember { com.example.Recyclothes.connectivity.ConnectivityObserver(ctx) }
-    val onlineFlow = remember { observer.onlineFlow() }
-    val onlineState by onlineFlow.collectAsState(initial = observer.isOnlineNow())
+    val observer = remember { ConnectivityObserver(ctx) }
+    val online by observer.onlineFlow().collectAsState(initial = observer.isOnlineNow())
+
+    var submitting by remember { mutableStateOf(false) }
+    var submittedOk by remember { mutableStateOf<Boolean?>(null) }
+    var submittedMsg by remember { mutableStateOf("") }
 
     fun goHome() {
         val act = ctx as? Activity
@@ -56,7 +62,7 @@ fun UsageFeaturesScreen(vm: UsageFeaturesViewModel = viewModel()) {
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            ConnectivityBanner(online = onlineState)
+            ConnectivityBanner(online = online)
             HeaderTitle()
 
             Spacer(Modifier.height(16.dp))
@@ -66,16 +72,37 @@ fun UsageFeaturesScreen(vm: UsageFeaturesViewModel = viewModel()) {
             Spacer(Modifier.height(24.dp))
 
             val featureOptions: List<FeatureId> =
-                if (least.isNotEmpty()) least.map { it.featureId }
-                else FeatureId.entries.toList()
+                if (least.isNotEmpty()) least.map { it.featureId } else FeatureId.entries.toList()
 
             FeedbackCard(
                 options = featureOptions,
                 submitting = submitting,
                 submittedOk = submittedOk,
-                onSubmit = { fid, why -> vm.submitFeedback(fid, why) },
-                onDismissSubmitted = { vm.clearSubmittedFlag() },
-                onNavigateHome = { goHome() }
+                onSubmit = { fid, why ->
+                    submitting = true
+                    val email = FirebaseAuth.getInstance().currentUser?.email ?: "anonymous@local"
+                    eventsVm.submitFeedback(
+                        userEmail = email,
+                        featureName = fid.label,
+                        why = why,
+                        onOnlineOk = {
+                            submitting = false
+                            submittedOk = true
+                            submittedMsg = "Thanks! Your feedback was sent."
+                        },
+                        onQueuedOffline = {
+                            submitting = false
+                            submittedOk = true
+                            submittedMsg = "Saved offline. It will be sent when you’re back online."
+                        }
+                    )
+                },
+                onDismissSubmitted = {
+                    submittedOk = null
+                    submittedMsg = ""
+                },
+                onNavigateHome = { goHome() },
+                customMessage = submittedMsg
             )
         }
     }
@@ -157,7 +184,8 @@ private fun FeedbackCard(
     submittedOk: Boolean?,
     onSubmit: (FeatureId, String) -> Unit,
     onDismissSubmitted: () -> Unit,
-    onNavigateHome: () -> Unit
+    onNavigateHome: () -> Unit,
+    customMessage: String
 ) {
     var expanded by remember { mutableStateOf(false) }
     var selected by remember { mutableStateOf(options.firstOrNull()) }
@@ -177,9 +205,7 @@ private fun FeedbackCard(
                 fontWeight = FontWeight.Bold
             )
             Spacer(Modifier.height(6.dp))
-            Text(
-                "Which feature should we improve, and why?"
-            )
+            Text("Which feature should we improve, and why?")
 
             Spacer(Modifier.height(14.dp))
 
@@ -230,17 +256,13 @@ private fun FeedbackCard(
                 onClick = { selected?.let { onSubmit(it, why) } },
                 enabled = selected != null && why.isNotBlank() && !submitting
             ) {
-                if (submitting) {
-                    CircularProgressIndicator()
-                } else {
-                    Text("Send feedback")
-                }
+                if (submitting) CircularProgressIndicator() else Text("Send feedback")
             }
 
             when (submittedOk) {
                 true -> {
                     Spacer(Modifier.height(8.dp))
-                    Text("Thanks! Your feedback was sent.", color = DeepBlue)
+                    Text(customMessage, color = DeepBlue)
                     LaunchedEffect(Unit) {
                         kotlinx.coroutines.delay(900)
                         onDismissSubmitted()
@@ -249,7 +271,7 @@ private fun FeedbackCard(
                 }
                 false -> {
                     Spacer(Modifier.height(8.dp))
-                    Text("We couldn't send it. Please try again.", color = DeepBlue)
+                    Text("We couldn’t send it. Please try again.", color = DeepBlue)
                 }
                 null -> Unit
             }
