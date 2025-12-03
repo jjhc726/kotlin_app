@@ -23,6 +23,7 @@ import com.example.Recyclothes.ui.theme.TealDark
 import com.example.Recyclothes.viewmodel.LeastUsedUi
 import com.example.Recyclothes.viewmodel.UsageFeaturesViewModel
 import androidx.compose.ui.platform.LocalContext
+import com.example.Recyclothes.connectivity.ConnectivityBanner
 
 @Composable
 fun UsageFeaturesScreen(vm: UsageFeaturesViewModel = viewModel()) {
@@ -33,6 +34,11 @@ fun UsageFeaturesScreen(vm: UsageFeaturesViewModel = viewModel()) {
     val submittedOk by vm.submittedOk.collectAsState()
 
     val ctx = LocalContext.current
+
+    val observer = remember { com.example.Recyclothes.connectivity.ConnectivityObserver(ctx) }
+    val onlineFlow = remember { observer.onlineFlow() }
+    val onlineState by onlineFlow.collectAsState(initial = observer.isOnlineNow())
+
     fun goHome() {
         val act = ctx as? Activity
         ctx.startActivity(
@@ -50,6 +56,7 @@ fun UsageFeaturesScreen(vm: UsageFeaturesViewModel = viewModel()) {
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            ConnectivityBanner(online = onlineState)
             HeaderTitle()
 
             Spacer(Modifier.height(16.dp))
