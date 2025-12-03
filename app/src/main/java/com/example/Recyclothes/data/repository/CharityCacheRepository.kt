@@ -23,6 +23,7 @@ class CharityCacheRepository(
     fun observe(): Flow<List<Charity>> =
         dao.observeAll().map { it.map { e -> e.toModel() } }
 
+    //se usa caching, se cachea el catalogo en room con un TTL. si no hay se trae de firebase y se pone en room
     suspend fun ensureFresh() = withContext(Dispatchers.IO) {
         val last = dao.lastCacheTs() ?: 0L
         val now = System.currentTimeMillis()

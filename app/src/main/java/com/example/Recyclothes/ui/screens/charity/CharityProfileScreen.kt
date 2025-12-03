@@ -23,6 +23,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,6 +36,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.Recyclothes.connectivity.ConnectivityBanner
 import com.example.Recyclothes.data.model.Charity
 import com.example.Recyclothes.ui.theme.DeepBlue
 import com.example.Recyclothes.ui.theme.SoftBlue
@@ -51,6 +53,11 @@ fun CharityProfileScreen(
     var liked by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
+    val ctx = LocalContext.current
+    val observer = remember { com.example.Recyclothes.connectivity.ConnectivityObserver(ctx) }
+    val onlineFlow = remember { observer.onlineFlow() }
+    val onlineState by onlineFlow.collectAsState(initial = observer.isOnlineNow())
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -59,6 +66,7 @@ fun CharityProfileScreen(
             .padding(20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        ConnectivityBanner(online = onlineState)
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -162,15 +170,7 @@ fun CharityProfileScreen(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        Button(
-            onClick = {
-                viewModel.addInteraction()
-            },
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(containerColor = DeepBlue)
-        ) {
-            Text("Donate", color = White)
-        }
+
 
         Spacer(modifier = Modifier.height(16.dp))
 

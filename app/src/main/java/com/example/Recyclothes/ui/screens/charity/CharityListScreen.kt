@@ -28,6 +28,9 @@ import com.example.Recyclothes.ui.theme.White
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
+import com.example.Recyclothes.connectivity.ConnectivityBanner
 import com.example.Recyclothes.viewmodel.CharityListFavoritesStateViewModel
 
 
@@ -36,6 +39,10 @@ fun CharityListScreen(
     charities: List<Charity>,
     onCharityClick: (Charity) -> Unit
 ) {
+    val ctx = LocalContext.current
+    val observer = remember { com.example.Recyclothes.connectivity.ConnectivityObserver(ctx) }
+    val onlineFlow = remember { observer.onlineFlow() }
+    val onlineState by onlineFlow.collectAsState(initial = observer.isOnlineNow())
 
     val favVm: CharityListFavoritesStateViewModel = viewModel()
     val favoriteIds by favVm.favoriteIds.collectAsState()
@@ -46,6 +53,7 @@ fun CharityListScreen(
             .background(SoftBlue)
             .padding(16.dp)
     ) {
+        ConnectivityBanner(online = onlineState)
         LazyColumn {
             items(charities.size) { index ->
                 val charity = charities[index]
