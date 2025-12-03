@@ -6,6 +6,7 @@ import android.content.Context
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.Recyclothes.connectivity.ConnectivityObserver
 import com.example.Recyclothes.data.remote.ScheduledDonationDto
 import com.example.Recyclothes.data.repository.EngagementRepository
 import com.example.Recyclothes.data.repository.OfflineScheduledDonationRepository
@@ -15,6 +16,8 @@ import java.text.SimpleDateFormat
 import java.util.TimeZone
 import java.util.Locale
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 
 class ScheduleDonationViewModel(app: Application) : AndroidViewModel(app) {
     val title = mutableStateOf("")
@@ -24,6 +27,7 @@ class ScheduleDonationViewModel(app: Application) : AndroidViewModel(app) {
     val clothingType = mutableStateOf("")
     val size = mutableStateOf("")
     val brand = mutableStateOf("")
+    private val net = ConnectivityObserver(app)
 
     val titleError = mutableStateOf<String?>(null)
     val dateError  = mutableStateOf<String?>(null)
@@ -37,6 +41,16 @@ class ScheduleDonationViewModel(app: Application) : AndroidViewModel(app) {
 
     private val engagementRepo = EngagementRepository()
 
+
+    init {
+        net.onlineFlow().onEach { isOnline ->
+            if (isOnline) {
+                viewModelScope.launch {
+                    offlineRepo.flushPending(onlineRepo)
+                }
+            }
+        }.launchIn(viewModelScope)
+    }
 
     private fun sessionEmail(): String? =
         FirebaseAuth.getInstance().currentUser?.email
