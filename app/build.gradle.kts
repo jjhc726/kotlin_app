@@ -44,6 +44,7 @@ android {
 }
 
 dependencies {
+    implementation("com.squareup.picasso:picasso:2.71828")
     implementation("io.coil-kt:coil-compose:2.6.0")
     implementation(libs.androidx.animation)
     implementation(libs.androidx.runtime)
