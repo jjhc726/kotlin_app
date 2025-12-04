@@ -13,7 +13,7 @@ import com.example.Recyclothes.data.repository.ScheduleDonationRepository
 import com.example.Recyclothes.data.repository.ScheduleDonationDraftRepository
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -39,18 +39,20 @@ class ScheduleDonationViewModel(app: Application) : AndroidViewModel(app) {
     val sizeError  = mutableStateOf<String?>(null)
     val brandError = mutableStateOf<String?>(null)
 
-    private val onlineRepo  = ScheduleDonationRepository()
-    private val offlineRepo = OfflineScheduledDonationRepository(app)
+    private val onlineRepo   = ScheduleDonationRepository()
+    private val offlineRepo  = OfflineScheduledDonationRepository(app)
+    private val draftRepo    = ScheduleDonationDraftRepository(app)
     private val engagementRepo = EngagementRepository()
     private val net = ConnectivityObserver(app)
 
-    // Draft (LRU + archivo)
-    private val draftRepo = ScheduleDonationDraftRepository(app)
-    private val autoSave = MutableStateFlow(Unit)
+    private val autoSave = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
+    private fun stableDraftKey(): String =
+        sessionEmail() ?: "schedule_donation_global"
 
     init {
         viewModelScope.launch {
-            draftRepo.load(draftKey())?.let { d ->
+            draftRepo.load(stableDraftKey())?.let { d ->
                 title.value = d.title
                 date.value  = d.date
                 time.value  = d.time
@@ -59,11 +61,12 @@ class ScheduleDonationViewModel(app: Application) : AndroidViewModel(app) {
                 size.value  = d.size
                 brand.value = d.brand
             }
+            setupAutosave()
         }
-        net.onlineFlow().onEach { if (it) viewModelScope.launch { offlineRepo.flushPending(onlineRepo) } }
-            .launchIn(viewModelScope)
 
-        setupAutosave()
+        net.onlineFlow().onEach { isOnline ->
+            if (isOnline) viewModelScope.launch { offlineRepo.flushPending(onlineRepo) }
+        }.launchIn(viewModelScope)
     }
 
     private fun sessionEmail(): String? =
@@ -73,27 +76,30 @@ class ScheduleDonationViewModel(app: Application) : AndroidViewModel(app) {
                 .getString("email", null)
                 ?.trim()?.lowercase()
 
-    private fun draftKey(): String = sessionEmail() ?: "anonymous"
-
     @OptIn(FlowPreview::class)
     private fun setupAutosave() {
-        autoSave.debounce(400).onEach {
-            draftRepo.save(
-                draftKey(),
-                com.example.Recyclothes.data.remote.ScheduleDonationDraft(
-                    title = title.value,
-                    date  = date.value,
-                    time  = time.value,
-                    note  = note.value,
-                    clothingType = clothingType.value,
-                    size  = size.value,
-                    brand = brand.value
+        autoSave
+            .debounce(400)
+            .onEach {
+                draftRepo.save(
+                    stableDraftKey(),
+                    com.example.Recyclothes.data.remote.ScheduleDonationDraft(
+                        title = title.value,
+                        date  = date.value,
+                        time  = time.value,
+                        note  = note.value,
+                        clothingType = clothingType.value,
+                        size  = size.value,
+                        brand = brand.value
+                    )
                 )
-            )
-        }.launchIn(viewModelScope)
+            }
+            .launchIn(viewModelScope)
     }
 
-    fun onFieldEdited() { autoSave.tryEmit(Unit) }
+    fun onFieldEdited() {
+        autoSave.tryEmit(Unit)
+    }
 
     private fun parseDateTimeMillis(date: String, time: String): Long? = try {
         val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).apply {
@@ -104,7 +110,9 @@ class ScheduleDonationViewModel(app: Application) : AndroidViewModel(app) {
 
     private fun validate(): Boolean {
         var ok = true
-        fun req(s: String, setErr: (String?) -> Unit) = if (s.isBlank()) { setErr("Required"); ok=false } else setErr(null)
+        fun req(s: String, setErr: (String?) -> Unit) =
+            if (s.isBlank()) { setErr("Required"); ok = false } else setErr(null)
+
         req(title.value){ titleError.value = it }
         req(date.value ){ dateError.value  = it }
         req(time.value ){ timeError.value  = it }
@@ -115,12 +123,11 @@ class ScheduleDonationViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     private suspend fun clearDraftAndResetForm() {
-        draftRepo.clear(draftKey())
+        draftRepo.clear(stableDraftKey())
         title.value = ""; date.value = ""; time.value = ""; note.value = ""
         clothingType.value = ""; size.value = ""; brand.value = ""
         titleError.value = null; dateError.value = null; timeError.value = null
         typeError.value = null; sizeError.value = null; brandError.value = null
-        autoSave.tryEmit(Unit) // guardará vacío (correcto para reiniciar)
     }
 
     fun submit(
@@ -130,9 +137,14 @@ class ScheduleDonationViewModel(app: Application) : AndroidViewModel(app) {
     ) = viewModelScope.launch {
         if (!validate()) { onError("Please fix the highlighted fields."); return@launch }
 
-        val email = sessionEmail() ?: run { onError("No active session; please log in."); return@launch }
-        val millis = parseDateTimeMillis(date.value, time.value)
-            ?: run { onError("Date/Time must be yyyy-MM-dd and HH:mm."); return@launch }
+        val email = sessionEmail() ?: run {
+            onError("No active session; please log in.")
+            return@launch
+        }
+        val millis = parseDateTimeMillis(date.value, time.value) ?: run {
+            onError("Date/Time must be yyyy-MM-dd and HH:mm.")
+            return@launch
+        }
 
         val ok = onlineRepo.create(
             ScheduledDonationDto(
