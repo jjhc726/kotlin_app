@@ -131,4 +131,29 @@ class FirebaseDonationService(
             .mapNotNull { it.getTimestamp("createdAt") }
             .maxByOrNull { it.toDate().time }
     }
+
+    suspend fun getDonationsByUser(userEmail: String): List<DonationItem> {
+        return try {
+            val key = userEmail.trim().lowercase()
+
+            val snap = donations
+                .whereEqualTo("userEmail", key)
+                .get()
+                .await()
+            snap.documents.map { doc ->
+                DonationItem(
+                    description = doc.getString("description") ?: "",
+                    clothingType = doc.getString("clothingType") ?: "",
+                    size = doc.getString("size") ?: "",
+                    brand = doc.getString("brand") ?: "",
+                    tags = doc.get("tags") as? List<String> ?: emptyList(),
+                    userEmail = doc.getString("userEmail") ?: "",
+                    createdAt = doc.getTimestamp("createdAt") ?: Timestamp.now()
+                )
+            }.sortedByDescending { it.createdAt?.toDate()?.time ?: 0L }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
+        }
+    }
 }

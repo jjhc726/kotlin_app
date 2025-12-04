@@ -28,4 +28,5 @@ class PickupRepository(
             pickupDao.markAsSynced(req.localId)
         }
     }
+    suspend fun getPendingPickups() = pickupDao.getPendingRequests()
 }
