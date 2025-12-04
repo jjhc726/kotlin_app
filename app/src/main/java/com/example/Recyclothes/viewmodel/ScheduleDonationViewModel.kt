@@ -6,8 +6,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.Recyclothes.connectivity.ConnectivityObserver
+import com.example.Recyclothes.data.remote.ScheduleDonationDraft
 import com.example.Recyclothes.data.remote.ScheduledDonationDto
-import com.example.Recyclothes.data.repository.*
+import com.example.Recyclothes.data.repository.EngagementRepository
+import com.example.Recyclothes.data.repository.OfflineScheduledDonationRepository
+import com.example.Recyclothes.data.repository.ScheduleDonationRepository
+import com.example.Recyclothes.data.repository.ScheduleDonationDraftRepository
+import com.example.Recyclothes.data.repository.ScheduleDonationDraftsRdbRepository
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
@@ -64,13 +69,29 @@ class ScheduleDonationViewModel(app: Application) : AndroidViewModel(app) {
             }
         }
 
-        net.onlineFlow().onEach { isOnline ->
-            if (isOnline) viewModelScope.launch { offlineRepo.flushPending(onlineRepo) }
-        }.launchIn(viewModelScope)
+        net.onlineFlow()
+            .onEach { isOnline -> if (isOnline) viewModelScope.launch { offlineRepo.flushPending(onlineRepo) } }
+            .launchIn(viewModelScope)
 
         setupAutosave()
     }
 
+    fun persistDraftNow() {
+        viewModelScope.launch {
+            draftRepo.save(
+                draftKey(),
+                ScheduleDonationDraft(
+                    title = title.value,
+                    date = date.value,
+                    time = time.value,
+                    note = note.value,
+                    clothingType = clothingType.value,
+                    size = size.value,
+                    brand = brand.value
+                )
+            )
+        }
+    }
     private fun sessionEmail(): String? =
         FirebaseAuth.getInstance().currentUser?.email
             ?: getApplication<Application>()
@@ -80,7 +101,7 @@ class ScheduleDonationViewModel(app: Application) : AndroidViewModel(app) {
 
     private fun draftKey(): String {
         val email = sessionEmail() ?: "anonymous"
-        val did  = currentDraftId
+        val did = currentDraftId
         return if (did != null) "$email#schedDraft:$did" else email
     }
 
@@ -127,7 +148,7 @@ class ScheduleDonationViewModel(app: Application) : AndroidViewModel(app) {
             .onEach {
                 draftRepo.save(
                     draftKey(),
-                    com.example.Recyclothes.data.remote.ScheduleDonationDraft(
+                    ScheduleDonationDraft(
                         title = title.value,
                         date  = date.value,
                         time  = time.value,
@@ -165,7 +186,6 @@ class ScheduleDonationViewModel(app: Application) : AndroidViewModel(app) {
 
     private suspend fun clearDraftAndResetForm() {
         val keyToClear = draftKey()
-
         currentDraftId?.let { withContext(Dispatchers.IO) { schedDraftsRepo.deleteById(it) } }
         currentDraftId = null
 

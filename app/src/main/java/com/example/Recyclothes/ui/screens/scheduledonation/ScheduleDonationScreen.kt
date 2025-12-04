@@ -19,6 +19,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.Recyclothes.connectivity.ConnectivityBanner
 import com.example.Recyclothes.connectivity.ConnectivityObserver
@@ -43,6 +45,22 @@ fun ScheduleDonationDesign(
     val ctx = LocalContext.current
     val observer = remember { ConnectivityObserver(ctx) }
     val online by observer.onlineFlow().collectAsState(initial = observer.isOnlineNow())
+
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_STOP) {
+                vm.persistDraftNow()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            vm.persistDraftNow()
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
 
     Column(
         modifier = Modifier
