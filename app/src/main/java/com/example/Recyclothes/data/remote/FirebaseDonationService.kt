@@ -6,12 +6,15 @@ import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.tasks.await
 
 class FirebaseDonationService(
     private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
 ) {
     private val donations = firestore.collection("donations")
+    private val metricsRef = firestore.collection("metrics").document("global")
+
 
     suspend fun uploadDonation(item: DonationItem, userEmail: String): Boolean {
         return try {
@@ -155,5 +158,22 @@ class FirebaseDonationService(
             e.printStackTrace()
             emptyList()
         }
+    }
+
+    suspend fun incrementDonationSubmit() {
+        try {
+            metricsRef.update("donationSubmitCount", FieldValue.increment(1))
+                .await()
+        } catch (e: Exception) {
+            metricsRef.set(
+                mapOf("donationSubmitCount" to 1),
+                SetOptions.merge()
+            ).await()
+        }
+    }
+
+    suspend fun incrementExitDraft() {
+        metricsRef.update("exitOrDraftCount", FieldValue.increment(1))
+                .await()
     }
 }

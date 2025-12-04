@@ -128,4 +128,12 @@ class DonationRepository(
     suspend fun insertPending(donation: DonationEntity) {
         pendingDao.insertPendingDonation(donation)
     }
+
+    suspend fun incrementDonationSubmit() {
+        service.incrementDonationSubmit()
+    }
+
+    suspend fun incrementExitDraft() {
+        service.incrementExitDraft()
+    }
 }

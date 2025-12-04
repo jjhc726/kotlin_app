@@ -59,10 +59,6 @@ fun DonationImagePicker(viewModel: DonationViewModel) {
         }
     }
 
-    // =====================================================
-    // 3️⃣ UI
-    // =====================================================
-
     Box(
         modifier = Modifier
             .fillMaxWidth()
