@@ -17,7 +17,7 @@ fun ConnectivityBanner(online: Boolean) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(32.dp)
+            .height(28.dp)
             .background(bg),
         contentAlignment = Alignment.Center
     ) {
