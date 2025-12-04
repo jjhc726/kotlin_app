@@ -2,40 +2,177 @@ package com.example.Recyclothes.viewmodel
 
 import android.app.Application
 import android.net.ConnectivityManager
+import android.util.LruCache
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.Recyclothes.R
+import androidx.room.Room
+import com.example.Recyclothes.data.local.AppDatabase
+import com.example.Recyclothes.data.local.entity.SeasonalCampaignEntity
 import com.example.Recyclothes.data.model.SeasonalCampaign
 import com.example.Recyclothes.data.repository.InteractionRepository
+import com.example.Recyclothes.data.repository.SeasonalCampaignLocalRepository
 import com.example.Recyclothes.utils.NetworkObserver
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.util.Calendar
 
 class SeasonalCampaignsViewModel(application: Application) : AndroidViewModel(application) {
 
+    private val db = Room.databaseBuilder(
+        application,
+        AppDatabase::class.java,
+        "recyclothes_db"
+    ).build()
+
+    private val repository = SeasonalCampaignLocalRepository(db.seasonalCampaignDao())
+
+    private val campaignCache = LruCache<Int, SeasonalCampaign>(20)
+
     private val _campaigns = MutableStateFlow<List<SeasonalCampaign>>(emptyList())
     val campaigns: StateFlow<List<SeasonalCampaign>> = _campaigns
+
     private val interactionRepository = InteractionRepository()
+
     private val _selectedCampaign = MutableStateFlow<SeasonalCampaign?>(null)
     val selectedCampaign: StateFlow<SeasonalCampaign?> = _selectedCampaign
+
+    private val network = NetworkObserver(application)
+    private val _networkStatus = MutableStateFlow(network.isOnline())
+    val networkStatus: StateFlow<Boolean> = _networkStatus
+
+    private var networkCallback: ConnectivityManager.NetworkCallback? = null
 
     init {
         loadCampaigns()
     }
 
-    private val network = NetworkObserver(application)
+    private fun loadCampaigns() {
+        viewModelScope.launch {
 
-    private val _networkStatus = MutableStateFlow(network.isOnline())
-    val networkStatus: StateFlow<Boolean> = _networkStatus.asStateFlow()
+            repository.getCampaigns().collect { entities ->
 
-    private var networkCallback: ConnectivityManager.NetworkCallback? = null
+                if (entities.isNotEmpty()) {
 
-    fun startNetworkObserver() {
-        networkCallback = network.registerCallback(
-            onAvailable = { _networkStatus.value = true },
-            onLost = { _networkStatus.value = false }
-        )
+                    val list = entities.map {
+                        SeasonalCampaign(
+                            id = it.id,
+                            title = it.title,
+                            description = it.description,
+                            date = it.date,
+                            location = it.location,
+                            imageRes = it.imageRes
+                        )
+                    }
+
+                    _campaigns.value = list
+
+                    list.forEach { campaign ->
+                        campaignCache.put(campaign.id, campaign)
+                    }
+
+                } else {
+                    val generated = generateSeasonalCampaigns()
+                    repository.saveCampaigns(generated)
+                }
+            }
+        }
+    }
+
+    private fun generateSeasonalCampaigns(): List<SeasonalCampaignEntity> {
+        val month = Calendar.getInstance().get(Calendar.MONTH) + 1
+
+        val winterImg = R.drawable.camp_winter
+        val holidayImg = R.drawable.camp_holiday
+        val springImg = R.drawable.camp_spring
+        val earthImg = R.drawable.camp_earth
+        val summerImg = R.drawable.camp_summer
+        val schoolImg = R.drawable.camp_school
+        val autumnImg = R.drawable.camp_autumn
+        val thanksImg = R.drawable.camp_thanks
+
+        return when (month) {
+            12, 1, 2 -> listOf(
+                SeasonalCampaignEntity(
+                    1, "Winter Warmth Drive",
+                    "Donate warm clothes and blankets to help those in need during the cold season.",
+                    "Del 5 al 20 de enero de 2025", "Centro Comunitario de Bogotá", winterImg
+                ),
+                SeasonalCampaignEntity(
+                    2, "Holiday Donation Week",
+                    "Support families with toys, clothes, and food this holiday season.",
+                    "Del 10 al 24 de diciembre de 2024", "Plaza Central de Medellín", holidayImg
+                )
+            )
+
+            3, 4, 5 -> listOf(
+                SeasonalCampaignEntity(
+                    3, "Spring Renewal",
+                    "Give your gently used clothes a new life and support local shelters.",
+                    "Del 15 al 2 de mayo de 2025", "Parque de los Deseos, Medellín", springImg
+                ),
+                SeasonalCampaignEntity(
+                    4, "Earth Month Campaign",
+                    "Join us in promoting sustainable fashion by donating recyclable garments.",
+                    "Durante todo abril de 2025", "EcoCentro, Cali", earthImg
+                )
+            )
+
+            6, 7, 8 -> listOf(
+                SeasonalCampaignEntity(
+                    5, "Summer Relief",
+                    "Help provide light clothes and essentials to those in warm conditions.",
+                    "Del 1 al 15 de julio de 2025", "Parque Simón Bolívar, Bogotá", summerImg
+                ),
+                SeasonalCampaignEntity(
+                    6,
+                    "Back to School Drive",
+                    "Donate school uniforms and supplies for kids starting the new term.",
+                    "Del 10 al 30 de agosto de 2025",
+                    "Fundación Educando Sonrisas, Bucaramanga",
+                    schoolImg
+                )
+            )
+
+            9, 10, 11 -> listOf(
+                SeasonalCampaignEntity(
+                    7,
+                    "Autumn Donation Fair",
+                    "Share coats and warm wear as temperatures begin to drop.",
+                    "Del 20 de septiembre al 5 de octubre de 2025",
+                    "Plaza Bolívar, Bogotá",
+                    autumnImg
+                ),
+                SeasonalCampaignEntity(
+                    8, "Thanksgiving Support",
+                    "Contribute clothing and essentials to families in preparation for the holidays.",
+                    "Del 1 al 15 de noviembre de 2025", "Centro Cultural de Cartagena", thanksImg
+                )
+            )
+
+            else -> emptyList()
+        }
+    }
+
+    fun selectCampaign(campaign: SeasonalCampaign) {
+
+        val cached = campaignCache.get(campaign.id)
+        if (cached != null) {
+            _selectedCampaign.value = cached
+            return
+        }
+
+        campaignCache.put(campaign.id, campaign)
+        _selectedCampaign.value = campaign
+    }
+
+    fun goBack() {
+        _selectedCampaign.value = null
+    }
+
+    fun addInteraction() {
+        viewModelScope.launch { interactionRepository.addCampaignInteraction() }
     }
 
     override fun onCleared() {
@@ -43,90 +180,12 @@ class SeasonalCampaignsViewModel(application: Application) : AndroidViewModel(ap
         networkCallback?.let { network.unregisterCallback(it) }
     }
 
-    private fun loadCampaigns() {
-        val month = java.util.Calendar.getInstance().get(java.util.Calendar.MONTH) + 1
+    fun startNetworkObserver() {
+        if (networkCallback != null) return
 
-        val campaigns = when (month) {
-            12, 1, 2 -> listOf(
-                SeasonalCampaign(
-                    id = 1,
-                    title = "Winter Warmth Drive",
-                    description = "Donate warm clothes and blankets to help those in need during the cold season.",
-                    date = "Del 5 al 20 de enero de 2025",
-                    location = "Centro Comunitario de Bogotá"
-                ),
-                SeasonalCampaign(
-                    id = 2,
-                    title = "Holiday Donation Week",
-                    description = "Support families with toys, clothes, and food this holiday season.",
-                    date = "Del 10 al 24 de diciembre de 2024",
-                    location = "Plaza Central de Medellín"
-                )
-            )
-            3, 4, 5 -> listOf(
-                SeasonalCampaign(
-                    id = 3,
-                    title = "Spring Renewal",
-                    description = "Give your gently used clothes a new life and support local shelters.",
-                    date = "Del 15 de abril al 2 de mayo de 2025",
-                    location = "Parque de los Deseos, Medellín"
-                ),
-                SeasonalCampaign(
-                    id = 4,
-                    title = "Earth Month Campaign",
-                    description = "Join us in promoting sustainable fashion by donating recyclable garments.",
-                    date = "Durante todo abril de 2025",
-                    location = "EcoCentro, Cali"
-                )
-            )
-            6, 7, 8 -> listOf(
-                SeasonalCampaign(
-                    id = 5,
-                    title = "Summer Relief",
-                    description = "Help provide light clothes and essentials to those in warm conditions.",
-                    date = "Del 1 al 15 de julio de 2025",
-                    location = "Parque Simón Bolívar, Bogotá"
-                ),
-                SeasonalCampaign(
-                    id = 6,
-                    title = "Back to School Drive",
-                    description = "Donate school uniforms and supplies for kids starting the new term.",
-                    date = "Del 10 al 30 de agosto de 2025",
-                    location = "Fundación Educando Sonrisas, Bucaramanga"
-                )
-            )
-            9, 10, 11 -> listOf(
-                SeasonalCampaign(
-                    id = 7,
-                    title = "Autumn Donation Fair",
-                    description = "Share coats and warm wear as temperatures begin to drop.",
-                    date = "Del 20 de septiembre al 5 de octubre de 2025",
-                    location = "Plaza Bolívar, Bogotá"
-                ),
-                SeasonalCampaign(
-                    id = 8,
-                    title = "Thanksgiving Support",
-                    description = "Contribute clothing and essentials to families in preparation for the holidays.",
-                    date = "Del 1 al 15 de noviembre de 2025",
-                    location = "Centro Cultural de Cartagena"
-                )
-            )
-            else -> emptyList()
-        }
-
-        _campaigns.value = campaigns
-    }
-
-    fun addInteraction() {
-        viewModelScope.launch {
-            interactionRepository.addCampaignInteraction()
-        }
-    }
-    fun selectCampaign(campaign: SeasonalCampaign) {
-        _selectedCampaign.value = campaign
-    }
-
-    fun goBack() {
-        _selectedCampaign.value = null
+        networkCallback = network.registerCallback(
+            onAvailable = { _networkStatus.value = true },
+            onLost = { _networkStatus.value = false }
+        )
     }
 }

@@ -10,6 +10,8 @@ import com.example.Recyclothes.data.dao.DonationPointDao
 import com.example.Recyclothes.data.dao.DraftDao
 import com.example.Recyclothes.data.dao.FavoriteCharityDao
 import com.example.Recyclothes.data.dao.PickupRequestDao
+import com.example.Recyclothes.data.local.dao.SeasonalCampaignDao
+import com.example.Recyclothes.data.local.entity.SeasonalCampaignEntity
 
 @Database(
     entities = [
@@ -19,9 +21,10 @@ import com.example.Recyclothes.data.dao.PickupRequestDao
         PickupRequestEntity::class,
         DraftDonationEntity::class,
         FavoriteCharityEntity::class,
-        FavoriteOpEntity::class
+        FavoriteOpEntity::class,
+        SeasonalCampaignEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 
@@ -30,6 +33,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun charityDao(): CharityDao
 
     abstract fun favoriteCharityDao(): FavoriteCharityDao
+
+    abstract fun seasonalCampaignDao(): SeasonalCampaignDao
 
     companion object {
         @Volatile private var INSTANCE: AppDatabase? = null
