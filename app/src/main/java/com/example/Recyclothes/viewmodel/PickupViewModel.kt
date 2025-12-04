@@ -2,12 +2,14 @@ package com.example.Recyclothes.viewmodel
 
 import android.app.Application
 import android.net.ConnectivityManager
+import android.util.Log
+import android.util.SparseArray
 import androidx.lifecycle.AndroidViewModel
 
 import androidx.lifecycle.viewModelScope
 import com.example.Recyclothes.data.local.PickupRequestEntity
-import com.example.Recyclothes.data.model.DonationPoint
-import com.example.Recyclothes.data.repository.CharitiesRepository
+import com.example.Recyclothes.data.model.DonationItem
+import com.example.Recyclothes.data.repository.DonationRepository
 import com.example.Recyclothes.data.repository.EngagementRepository
 import com.example.Recyclothes.data.repository.PickupRepository
 import com.example.Recyclothes.data.repository.UserRepository
@@ -15,12 +17,8 @@ import com.example.Recyclothes.utils.NetworkObserver
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -32,8 +30,7 @@ sealed class NetworkEvent {
 class PickupViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repo = PickupRepository(application)
-    private val charitiesRepo = CharitiesRepository(application)
-
+    private val donationRepo = DonationRepository(application)
     private val engagementRepo = EngagementRepository()
 
     private val network = NetworkObserver(application)
@@ -44,40 +41,30 @@ class PickupViewModel(application: Application) : AndroidViewModel(application) 
     val date = MutableStateFlow("")
     val hour = MutableStateFlow("")
     val cause = MutableStateFlow("")
+    private val _donations = MutableStateFlow<SparseArray<DonationItem>>(SparseArray())
+    val donations: StateFlow<SparseArray<DonationItem>> = _donations
 
-    private val _charities = MutableStateFlow<List<DonationPoint>>(emptyList())
-    fun filteredCharities(): StateFlow<List<DonationPoint>> =
-        _charities.combine(cause) { list, c -> list.filter { it.cause.equals(c, ignoreCase = true) } }
-            .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
-
-    // network status exposed
     private val _networkStatus = MutableStateFlow(network.isOnline())
     val networkStatus: StateFlow<Boolean> = _networkStatus.asStateFlow()
 
     private val _networkEvents = MutableSharedFlow<NetworkEvent>(replay = 1)
     private var networkCallback: ConnectivityManager.NetworkCallback? = null
 
-    fun loadCharities() {
+    fun loadUserDonations() {
         viewModelScope.launch(Dispatchers.IO) {
-            // load local cache first
-            val local = charitiesRepo.getLocalDonationPoints()
-            _charities.value = local
+            val email = userRepo.currentEmail() ?: return@launch
 
-            // try refresh remote if online
-            if (network.isOnline()) {
-                try {
-                    val remote = charitiesRepo.getRemoteAndCache()
-                    _charities.value = remote
-                } catch (e: Exception) {
-                    // ignore remote failures, keep cached data
-                }
+            val list = donationRepo.getUserDonations(email)
+
+            val sparse = SparseArray<DonationItem>()
+            list.forEachIndexed { index, item ->
+                sparse.put(index, item)
             }
+
+            _donations.value = sparse
         }
     }
 
-    /**
-     * Starts network observer and emits events to UI. You can call this from a composable LaunchedEffect once.
-     */
     fun startNetworkObserver() {
         networkCallback = network.registerCallback(
             onAvailable = {
@@ -101,22 +88,20 @@ class PickupViewModel(application: Application) : AndroidViewModel(application) 
     }
 
 
-    /**
-     * Submit pickup. onNoConnection() and onFinished() are invoked on the main thread.
-     */
     fun submitPickup(
-        foundationId: String,
+        donationId: String,
         userId: String,
         onNoConnection: () -> Unit = {},
         onFinished: () -> Unit = {}
     ) {
+
         val pickup = PickupRequestEntity(
+            donationId = donationId,
             userId = userId,
             address = address.value,
             date = date.value,
             hour = hour.value,
-            cause = cause.value,
-            foundationId = foundationId
+            isCompleted = false
         )
 
         viewModelScope.launch(Dispatchers.IO) {

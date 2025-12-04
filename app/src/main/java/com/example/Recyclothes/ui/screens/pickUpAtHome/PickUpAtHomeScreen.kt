@@ -29,6 +29,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.AlertDialog
@@ -37,6 +38,8 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -62,169 +65,155 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.Recyclothes.data.model.DonationPoint
-import com.example.Recyclothes.ui.screens.main.MainNavigationActivity
 import com.example.Recyclothes.viewmodel.PickupViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PickUpAtHomeScreen(viewModel: PickupViewModel = viewModel()) {
+
     val context = LocalContext.current
 
-    // ViewModel state
     val address by viewModel.address.collectAsState()
     val date by viewModel.date.collectAsState()
     val hour by viewModel.hour.collectAsState()
-    val cause by viewModel.cause.collectAsState()
-    val charities by viewModel.filteredCharities().collectAsState(initial = emptyList())
+    val donations by viewModel.donations.collectAsState()
     val networkAvailable by viewModel.networkStatus.collectAsState()
-
-    // UI state
-    var selectedFoundation by remember { mutableStateOf<String?>(null) }
-    var showLoading by remember { mutableStateOf(false) }
-    var showOfflineDialog by remember { mutableStateOf(false) }
-    val snackbarHostState = remember { SnackbarHostState() }
     val bannerDismissed = remember { mutableStateOf(false) }
 
+    var selectedDonationId by remember { mutableStateOf<String?>(null) }
+    var selectedDonation by remember { mutableStateOf<String?>(null) }
+    var expanded by remember { mutableStateOf(false) }
+
+    var showLoading by remember { mutableStateOf(false) }
+    var showOfflineDialog by remember { mutableStateOf(false) }
+
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // Load donations on start
     LaunchedEffect(Unit) {
         viewModel.startNetworkObserver()
-    }
-    // load charities once
-    LaunchedEffect(Unit) {
-        viewModel.loadCharities()
-    }
-
-
-    LaunchedEffect(networkAvailable) {
-        if (networkAvailable) {
-            bannerDismissed.value = false
-        }
+        viewModel.loadUserDonations()
     }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
+
+        Column(
+            Modifier
                 .padding(padding)
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState())
         ) {
-            Column(
-                Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(padding)
-                    .padding(16.dp)
-            ) {
-                // ADDRESS
+
+            OutlinedTextField(
+                value = address,
+                onValueChange = { viewModel.address.value = it },
+                label = { Text("Enter your address") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(Modifier.height(14.dp))
+
+            DateField(date) { viewModel.date.value = it }
+
+            Spacer(Modifier.height(14.dp))
+
+            TimeField(hour) { viewModel.hour.value = it }
+
+            Spacer(Modifier.height(20.dp))
+
+
+            // --------------------------------------
+            // DONATION DROPDOWN
+            // --------------------------------------
+            Text("Select one of your donations:", style = MaterialTheme.typography.titleMedium)
+
+            Spacer(Modifier.height(10.dp))
+
+            Box {
                 OutlinedTextField(
-                    value = address,
-                    onValueChange = { viewModel.address.value = it },
-                    label = { Text("Enter your address") },
-                    modifier = Modifier.fillMaxWidth()
+                    value = selectedDonation ?: "Choose donation",
+                    onValueChange = {},
+                    modifier = Modifier.fillMaxWidth(),
+                    readOnly = true,
+                    trailingIcon = {
+                        IconButton(onClick = { expanded = true }) {
+                            Icon(Icons.Default.ArrowDropDown, contentDescription = null)
+                        }
+                    }
                 )
 
-                Spacer(Modifier.height(12.dp))
-
-                DateField(date = date, onDateSelected = { viewModel.date.value = it })
-
-                Spacer(Modifier.height(12.dp))
-
-                TimeField(time = hour, onTimeSelected = { viewModel.hour.value = it })
-
-                Spacer(Modifier.height(12.dp))
-
-                CauseSelector(selected = cause, onSelected = { viewModel.cause.value = it })
-
-                Spacer(Modifier.height(20.dp))
-
-                Text("Available foundations:", style = MaterialTheme.typography.titleMedium)
-
-                CharitySelector(
-                    charities = charities,
-                    selectedId = selectedFoundation,
-                    onSelected = { selectedFoundation = it }
-                )
-
-                Spacer(Modifier.height(60.dp))
-
-                Button(
-                    onClick = {
-                        val userEmail = viewModel.getCurrentUserEmail()
-
-                        if (address.isBlank()) {
-                            Toast.makeText(context, "Please enter your address", Toast.LENGTH_SHORT)
-                                .show()
-                            return@Button
-                        }
-                        if (date.isBlank()) {
-                            Toast.makeText(context, "Please select a date", Toast.LENGTH_SHORT)
-                                .show()
-                            return@Button
-                        }
-                        if (hour.isBlank()) {
-                            Toast.makeText(context, "Please select a time", Toast.LENGTH_SHORT)
-                                .show()
-                            return@Button
-                        }
-                        if (cause.isBlank()) {
-                            Toast.makeText(context, "Please select a cause", Toast.LENGTH_SHORT)
-                                .show()
-                            return@Button
-                        }
-                        if (selectedFoundation.isNullOrBlank()) {
-                            Toast.makeText(
-                                context,
-                                "Please select a foundation",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                            return@Button
-                        }
-
-                        showLoading = true
-
-                        viewModel.submitPickup(
-                            foundationId = selectedFoundation!!,
-                            userId = userEmail,
-                            onNoConnection = {
-                                showLoading = false
-                                viewModel.resetForm()
-                                selectedFoundation = null
-                                showOfflineDialog = true
-                            },
-                            onFinished = {
-                                showLoading = false
-                                viewModel.resetForm()
-                                selectedFoundation = null
-                                Toast.makeText(
-                                    context,
-                                    "Pickup created successfully",
-                                    Toast.LENGTH_LONG
-                                ).show()
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    for (i in 0 until donations.size()) {
+                        val donation = donations[i]
+                        DropdownMenuItem(
+                            text = { Text("${donation.clothingType} - ${donation.size}") },
+                            onClick = {
+                                selectedDonationId = i.toString()
+                                selectedDonation = donation.clothingType + " - " + donation.size
+                                expanded = false
                             }
                         )
-                        viewModel.onPickupAtHomeSelected()
-                    },
-
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    enabled = !showLoading,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF1B454B),
-                        contentColor = Color.White
-                    )
-                ) {
-                    Text("Confirm Pickup")
+                    }
                 }
             }
+
+            Spacer(Modifier.height(40.dp))
+
+            Button(
+                onClick = {
+                    val email = viewModel.getCurrentUserEmail()
+                    viewModel.onPickupAtHomeSelected()
+
+                    if (address.isBlank() || date.isBlank() || hour.isBlank()) {
+                        Toast.makeText(context, "Fill all fields", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
+                    if (selectedDonationId == null) {
+                        Toast.makeText(context, "Select a donation", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
+
+                    showLoading = true
+
+                    viewModel.submitPickup(
+                        donationId = selectedDonationId!!,
+                        userId = email,
+                        onNoConnection = {
+                            showLoading = false
+                            viewModel.resetForm()
+                            selectedDonationId = null
+                            showOfflineDialog = true
+                        },
+                        onFinished = {
+                            showLoading = false
+                            viewModel.resetForm()
+                            selectedDonationId = null
+                            Toast.makeText(context, "Pickup created", Toast.LENGTH_LONG).show()
+                        }
+                    )
+
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                enabled = !showLoading
+            ) {
+                Text("Confirm Pickup")
+            }
+
+            Spacer(Modifier.height(40.dp))
+
             AnimatedVisibility(
                 visible = !networkAvailable && !bannerDismissed.value,
                 enter = fadeIn() + slideInVertically(initialOffsetY = { it / 2 }),
                 exit = fadeOut() + slideOutVertically(targetOffsetY = { it / 2 }),
                 modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 80.dp)
+                    .padding(bottom = 8.dp)
                     .padding(12.dp)
             ) {
                 Card(
@@ -245,7 +234,7 @@ fun PickUpAtHomeScreen(viewModel: PickupViewModel = viewModel()) {
                             imageVector = Icons.Default.CloudOff,
                             contentDescription = "Offline",
                             modifier = Modifier.size(18.dp),
-                            tint = Color(0xFF003366) // DeepBlue
+                            tint = Color(0xFF003366)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
@@ -256,7 +245,10 @@ fun PickUpAtHomeScreen(viewModel: PickupViewModel = viewModel()) {
                     }
                 }
             }
-            }
+
+        }
+
+        }
 
             if (showLoading) {
                 AlertDialog(
@@ -280,8 +272,6 @@ fun PickUpAtHomeScreen(viewModel: PickupViewModel = viewModel()) {
                 )
             }
     }
-}
-
 
 @Composable
 private fun DateField(date: String, onDateSelected: (String) -> Unit) {
@@ -337,36 +327,4 @@ private fun TimeField(time: String, onTimeSelected: (String) -> Unit) {
         },
         modifier = Modifier.fillMaxWidth()
     )
-}
-
-@Composable
-fun CauseSelector(selected: String, onSelected: (String) -> Unit) {
-    val options = listOf("children", "adults", "emergency")
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-        options.forEach { option ->
-            FilterChip(
-                selected = selected == option,
-                onClick = { onSelected(option) },
-                label = { Text(option.replaceFirstChar { it.uppercase() }) }
-            )
-        }
-    }
-}
-
-@Composable
-fun CharitySelector(charities: List<DonationPoint>, selectedId: String?, onSelected: (String) -> Unit) {
-    Column {
-        if (charities.isEmpty()) {
-            Text("No foundations for this cause.")
-        } else {
-            charities.forEach { f ->
-                FilterChip(
-                    selected = selectedId == f.id,
-                    onClick = { onSelected(f.id) },
-                    label = { Text(f.name) }
-                )
-                Spacer(Modifier.height(6.dp))
-            }
-        }
-    }
 }

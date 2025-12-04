@@ -41,6 +41,7 @@
         <activity android:name=".ui.screens.register.RegisterActivity"/>
         <activity android:name=".ui.screens.main.MainNavigationActivity"/>
         <activity android:name=".ui.screens.usagefeatures.UsageFeaturesActivity" />
+        <activity android:name=".ui.screens.pendingpickups.PendingPickupsActivity" />
         <activity android:name=".ui.screens.localdrafts.LocalDraftsActivity" />
 
         <activity
