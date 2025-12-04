@@ -13,9 +13,15 @@ class CharityListFavoritesStateViewModel(app: Application) : AndroidViewModel(ap
     private val repo = FavoriteCharitiesRepository(app)
 
     val favoriteIds: StateFlow<Set<Int>> =
-        repo.observeFavoriteIds().stateIn(viewModelScope, SharingStarted.Eagerly, emptySet())
+        repo.observeFavoriteIds().stateIn(
+            viewModelScope,
+            SharingStarted.Eagerly,
+            emptySet()
+        )
 
     fun toggle(id: Int) {
-        viewModelScope.launch { repo.toggleFavorite(id) }
+        viewModelScope.launch {
+            repo.toggleFavorite(id)
+        }
     }
 }

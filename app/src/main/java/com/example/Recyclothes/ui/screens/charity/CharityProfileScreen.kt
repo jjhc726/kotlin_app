@@ -1,9 +1,9 @@
 package com.example.Recyclothes.ui.screens.charity
 
 import android.content.Intent
+import android.widget.ImageView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -30,11 +30,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.Recyclothes.connectivity.ConnectivityBanner
 import com.example.Recyclothes.data.model.Charity
@@ -45,6 +47,8 @@ import com.example.Recyclothes.ui.theme.SoftBlue
 import com.example.Recyclothes.ui.theme.TealMedium
 import com.example.Recyclothes.ui.theme.White
 import com.example.Recyclothes.viewmodel.CharityViewModel
+import com.example.Recyclothes.R
+import com.squareup.picasso.Picasso
 import kotlin.jvm.java
 
 @Composable
@@ -56,8 +60,7 @@ fun CharityProfileScreen(
     var liked by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
-    val ctx = LocalContext.current
-    val observer = remember { com.example.Recyclothes.connectivity.ConnectivityObserver(ctx) }
+    val observer = remember { com.example.Recyclothes.connectivity.ConnectivityObserver(context) }
     val onlineFlow = remember { observer.onlineFlow() }
     val onlineState by onlineFlow.collectAsState(initial = observer.isOnlineNow())
 
@@ -70,11 +73,27 @@ fun CharityProfileScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         ConnectivityBanner(online = onlineState)
-        Box(
+        AndroidView(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(200.dp)
-                .background(Color(0xFF80CBC4), RoundedCornerShape(12.dp))
+                .clip(RoundedCornerShape(12.dp)),
+            factory = { context ->
+                ImageView(context).apply {
+                    scaleType = ImageView.ScaleType.CENTER_CROP
+                }
+            },
+            update = { imageView ->
+                val imageName = charity.imageName ?: "p1"
+                val resId = context.resources.getIdentifier(imageName, "drawable", context.packageName)
+                    .takeIf { it != 0 } ?: R.drawable.p1
+
+                Picasso.get()
+                    .load(resId)
+                    .placeholder(R.drawable.p1)
+                    .error(R.drawable.p1)
+                    .into(imageView)
+            }
         )
 
         Spacer(modifier = Modifier.height(20.dp))
