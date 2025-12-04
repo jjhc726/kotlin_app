@@ -32,7 +32,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import com.example.Recyclothes.connectivity.ConnectivityBanner
 import com.example.Recyclothes.viewmodel.CharityListFavoritesStateViewModel
-
+import androidx.compose.ui.viewinterop.AndroidView
+import android.widget.ImageView
+import com.squareup.picasso.Picasso
+import com.example.Recyclothes.R
 
 @Composable
 fun CharityListScreen(
@@ -54,10 +57,12 @@ fun CharityListScreen(
             .padding(16.dp)
     ) {
         ConnectivityBanner(online = onlineState)
+
         LazyColumn {
             items(charities.size) { index ->
                 val charity = charities[index]
                 val isFav = favoriteIds.contains(charity.id)
+
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -73,17 +78,35 @@ fun CharityListScreen(
                             .fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Box(
+
+                        AndroidView(
                             modifier = Modifier
                                 .size(60.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(SoftBlue)
-                                .clickable { onCharityClick(charity) }
+                                .clip(RoundedCornerShape(8.dp)),
+                            factory = { context ->
+                                ImageView(context).apply {
+                                    scaleType = ImageView.ScaleType.CENTER_CROP
+                                }
+                            },
+                            update = { imageView ->
+                                val imageName = charity.imageName ?: "p1"
+                                val imageRes = ctx.resources.getIdentifier(
+                                    imageName,
+                                    "drawable",
+                                    ctx.packageName
+                                ).takeIf { it != 0 } ?: R.drawable.p1
+
+                                Picasso.get()
+                                    .load(imageRes)
+                                    .placeholder(R.drawable.p1)
+                                    .error(R.drawable.p1)
+                                    .into(imageView)
+                            }
                         )
 
                         Spacer(modifier = Modifier.width(16.dp))
 
-                        Column (
+                        Column(
                             modifier = Modifier
                                 .weight(1f)
                                 .clickable { onCharityClick(charity) }
@@ -101,11 +124,20 @@ fun CharityListScreen(
                                 color = White
                             )
                         }
+
                         IconButton(onClick = { favVm.toggle(charity.id) }) {
                             if (isFav) {
-                                Icon(Icons.Filled.Favorite, contentDescription = "Unfavorite", tint = Color.Red)
+                                Icon(
+                                    Icons.Filled.Favorite,
+                                    contentDescription = "Unfavorite",
+                                    tint = Color.Red
+                                )
                             } else {
-                                Icon(Icons.Outlined.FavoriteBorder, contentDescription = "Favorite", tint = White)
+                                Icon(
+                                    Icons.Outlined.FavoriteBorder,
+                                    contentDescription = "Favorite",
+                                    tint = White
+                                )
                             }
                         }
                     }
