@@ -44,6 +44,7 @@
         <activity android:name=".ui.screens.pendingpickups.PendingPickupsActivity" />
         <activity android:name=".ui.screens.localdrafts.LocalDraftsActivity" />
         <activity android:name=".ui.screens.chat.ChatActivity" />
+        <activity android:name=".ui.screens.apprating.AppRatingActivity" />
 
         <activity
             android:name=".MainActivity"

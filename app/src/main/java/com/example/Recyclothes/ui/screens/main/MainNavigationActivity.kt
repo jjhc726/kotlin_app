@@ -190,6 +190,13 @@ fun MainNavigationScreen() {
                                         context.startActivity(Intent(context, com.example.Recyclothes.ui.screens.drafts.DraftsActivity::class.java))
                                     }
                                 )
+                                DropdownMenuItem(
+                                    text = { Text("Rate app") },
+                                    onClick = {
+                                        expanded = false
+                                        context.startActivity(Intent(context, com.example.Recyclothes.ui.screens.apprating.AppRatingActivity::class.java))
+                                    }
+                                )
 
 
                             }
