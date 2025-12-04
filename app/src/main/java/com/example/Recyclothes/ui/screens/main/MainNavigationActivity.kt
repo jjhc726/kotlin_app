@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
@@ -66,6 +67,7 @@ import com.example.Recyclothes.connectivity.ConnectivityObserver
 import com.example.Recyclothes.data.model.Charity
 import com.example.Recyclothes.data.model.FeatureId
 import com.example.Recyclothes.data.repository.DonationRepository
+import com.example.Recyclothes.ui.screens.pendingpickups.PendingPickupsActivity
 import com.example.Recyclothes.ui.screens.favorites.FavoritesHostActivity
 import com.example.Recyclothes.ui.screens.localdrafts.LocalDraftsActivity
 import com.example.Recyclothes.ui.screens.usagefeatures.UsageFeaturesActivity
@@ -210,12 +212,40 @@ fun MainNavigationScreen() {
                 },
                 actions = {
                     if (selectedItem == BottomNavItem.Home) {
-                        IconButton(onClick = { showNotifications = true
-                            UsageTracker.bump(FeatureId.NOTIFICATIONS_OPEN)}) {
+                        IconButton(onClick = {
+                            showNotifications = true
+                            UsageTracker.bump(FeatureId.NOTIFICATIONS_OPEN)
+                        }) {
                             Icon(
                                 Icons.Default.Notifications,
                                 contentDescription = "Notifications",
                                 tint = Color.White
+                            )
+                        }
+                    }
+                    if (selectedItem == BottomNavItem.PickUp) {
+                        var menuExpanded by remember { mutableStateOf(false) }
+
+                        IconButton(onClick = { menuExpanded = true }) {
+                            Icon(
+                                Icons.Default.Menu,
+                                contentDescription = "More options",
+                                tint = Color.White
+                            )
+                        }
+
+                        DropdownMenu(
+                            expanded = menuExpanded,
+                            onDismissRequest = { menuExpanded = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Pending pickups") },
+                                onClick = {
+                                    menuExpanded = false
+                                    context.startActivity(
+                                        Intent(context, PendingPickupsActivity::class.java)
+                                    )
+                                }
                             )
                         }
                     }

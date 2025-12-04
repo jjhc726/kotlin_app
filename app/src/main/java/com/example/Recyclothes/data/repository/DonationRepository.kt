@@ -65,6 +65,15 @@ class DonationRepository(
         }
     }
 
+    suspend fun getUserDonations(userEmail: String): List<DonationItem> {
+        return try {
+            service.getDonationsByUser(userEmail)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
+        }
+    }
+
     // -------------------------------
     // FIREBASE QUERIES
     // -------------------------------
@@ -93,6 +102,8 @@ class DonationRepository(
     suspend fun getLastDonationTimestamp(userEmail: String): Timestamp? {
         return service.getLastDonationTimestamp(userEmail)
     }
+
+
 
     // -------------------------------
     // BORRADORES (drafts)
