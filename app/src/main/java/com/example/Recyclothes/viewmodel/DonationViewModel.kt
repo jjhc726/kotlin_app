@@ -1,7 +1,9 @@
 package com.example.Recyclothes.viewmodel
 
 import android.app.Application
+import android.content.ContentValues
 import android.graphics.Bitmap
+import android.net.Uri
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
@@ -20,6 +22,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import android.content.Context
+import android.graphics.ImageDecoder
+import android.os.Build
+import android.provider.MediaStore
 
 data class TopDonor(
     val name: String,
@@ -35,11 +41,14 @@ class DonationViewModel(
     private val userRepo = UserRepository()
     private val prefs = PreferenceHelper(app.applicationContext)
 
-    // Load persistent data
-    val capturedImage = state.getStateFlow<Bitmap?>(
-        "capturedImage",
-        prefs.loadBitmap("capturedImage")
+    // ------------------------------------------------------------------------
+    // 1. AQUÍ SE ARREGLA: Se reemplaza Bitmap por URI
+    // ------------------------------------------------------------------------
+    val capturedImageUri = state.getStateFlow<Uri?>(
+        "capturedImageUri",
+        prefs.loadUri("capturedImageUri")
     )
+
     val description = state.getStateFlow(
         "description",
         prefs.load("description")
@@ -61,12 +70,46 @@ class DonationViewModel(
         prefs.loadList("selectedTags")
     )
 
-    // Save updates
-    fun updateImage(img: Bitmap?) {
-        state["capturedImage"] = img
-        prefs.saveBitmap("capturedImage", img)
+    // ------------------------------------------------------------------------
+    // IMAGEN DESDE CÁMARA / GALERÍA
+    // ------------------------------------------------------------------------
+    fun updateImageUri(uri: Uri?) {
+        state["capturedImageUri"] = uri
+        prefs.saveUri("capturedImageUri", uri)
     }
 
+    fun createImageUri(context: Context): Uri? {
+        val contentResolver = context.contentResolver
+
+        val contentValues = ContentValues().apply {
+            put(MediaStore.Images.Media.DISPLAY_NAME, "donation_${System.currentTimeMillis()}.jpg")
+            put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+            put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/Recyclothes")
+        }
+
+        return contentResolver.insert(
+            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+            contentValues
+        )
+    }
+
+    fun uriToBitmap(context: Context, uri: Uri): Bitmap? {
+        return try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                val source = ImageDecoder.createSource(context.contentResolver, uri)
+                ImageDecoder.decodeBitmap(source)
+            } else {
+                MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    // INPUTS
+    // ------------------------------------------------------------------------
     fun updateDescription(text: String) {
         state["description"] = text
         prefs.save("description", text)
@@ -94,7 +137,7 @@ class DonationViewModel(
             else
                 selectedTags.value + tag
 
-        state.set("selectedTags", updated)
+        state["selectedTags"] = updated
         prefs.saveList("selectedTags", updated)
     }
 
@@ -108,7 +151,6 @@ class DonationViewModel(
     val topDonors: StateFlow<List<TopDonor>> = _topDonors.asStateFlow()
 
     private var recentListener: ListenerRegistration? = null
-
     private var editingDraftId: Long? = null
 
     val availableTags = listOf(
@@ -118,6 +160,9 @@ class DonationViewModel(
 
     private fun sessionEmail(): String? = userRepo.currentEmail()
 
+    // ------------------------------------------------------------------------
+    // VALIDACIÓN (CORREGIDA PARA URI)
+    // ------------------------------------------------------------------------
     private fun validateInputs(): String? {
         descriptionError.value = null
         clothingTypeError.value = null
@@ -125,7 +170,7 @@ class DonationViewModel(
         brandError.value = null
         imageError.value = null
 
-        if (capturedImage.value == null) {
+        if (capturedImageUri.value == null) {
             imageError.value = "You must capture an image"
             return imageError.value
         }
@@ -153,6 +198,9 @@ class DonationViewModel(
         return null
     }
 
+    // ------------------------------------------------------------------------
+    // UPLOAD DONATION (NO NECESITÓ CAMBIOS)
+    // ------------------------------------------------------------------------
     fun uploadDonation(onResult: (Boolean, Boolean, String) -> Unit) {
         val error = validateInputs()
         if (error != null) {
@@ -193,14 +241,11 @@ class DonationViewModel(
                     clearAll()
                     onResult(true, true, "Donation saved offline.")
                 }
-
                 return@launch
             }
 
-
             try {
                 val uploaded = repository.uploadDonation(donationItem, email)
-
                 withContext(Dispatchers.Main) {
                     if (uploaded) {
                         clearAll()
@@ -209,10 +254,8 @@ class DonationViewModel(
                         onResult(true, true, "Donation saved offline.")
                     }
                 }
-
             } catch (e: Exception) {
                 repository.insertPending(localDonation)
-
                 withContext(Dispatchers.Main) {
                     onResult(true, true, "Donation saved offline.")
                 }
@@ -223,7 +266,7 @@ class DonationViewModel(
     fun clearAll() {
         prefs.clearAll()
 
-        state["capturedImage"] = null
+        state["capturedImageUri"] = null
         state["description"] = ""
         state["clothingType"] = ""
         state["size"] = ""
@@ -241,11 +284,9 @@ class DonationViewModel(
         }
     }
 
-    override fun onCleared() {
-        recentListener?.remove()
-        super.onCleared()
-    }
-
+    // ------------------------------------------------------------------------
+    // DRAFTS
+    // ------------------------------------------------------------------------
     fun loadDraft(id: Long) {
         viewModelScope.launch {
             val draft = repository.getDraftById(id)
@@ -276,6 +317,35 @@ class DonationViewModel(
                 editingDraftId = repository.insertDraft(draft)
             else
                 repository.updateDraft(draft)
+        }
+    }
+
+    override fun onCleared() {
+        recentListener?.remove()
+        super.onCleared()
+    }
+
+    fun reloadSavedImage() {
+        val saved = prefs.loadUri("capturedImageUri")
+        state["capturedImageUri"] = saved
+    }
+
+    fun copyGalleryImageToAppStorage(context: Context, sourceUri: Uri): Uri? {
+        return try {
+            val resolver = context.contentResolver
+
+            val newUri = createImageUri(context) ?: return null
+
+            resolver.openInputStream(sourceUri).use { input ->
+                resolver.openOutputStream(newUri).use { output ->
+                    input?.copyTo(output!!)
+                }
+            }
+
+            newUri
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
         }
     }
 }
