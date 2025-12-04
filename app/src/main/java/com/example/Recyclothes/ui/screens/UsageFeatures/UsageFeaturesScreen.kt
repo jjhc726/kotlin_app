@@ -97,6 +97,15 @@ fun UsageFeaturesScreen(
                 submitting = submitting,
                 onSelect = vm::onFeatureSelected,
                 onWhyChange = vm::onWhyChanged,
+                onSaveDraft = {
+                    val ctxLocal = ctx
+                    vm.saveDraftNow(
+                        onSaved = { msg ->
+                            android.widget.Toast.makeText(ctxLocal, msg, android.widget.Toast.LENGTH_LONG).show()
+                        },
+                        existingId = null
+                    )
+                },
                 onSubmit = { fid, text -> vm.submitFeedback(fid, text) }
             )
         }
@@ -210,6 +219,7 @@ private fun FeedbackCard(
     submitting: Boolean,
     onSelect: (FeatureId) -> Unit,
     onWhyChange: (String) -> Unit,
+    onSaveDraft: () -> Unit,
     onSubmit: (FeatureId?, String) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -255,6 +265,11 @@ private fun FeedbackCard(
                 label = { Text("Why should we improve it?") },
                 modifier = Modifier.fillMaxWidth()
             )
+
+            OutlinedButton(
+                onClick = onSaveDraft,
+                enabled = true
+            ) { Text("Save draft") }
 
             Spacer(Modifier.height(12.dp))
             Button(

@@ -64,5 +64,10 @@
             android:name=".ui.screens.favorites.FavoritesHostActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".ui.screens.drafts.DraftsActivity"
+            android:exported="false"
+            android:label="Drafts"/>
+
     </application>
 </manifest>

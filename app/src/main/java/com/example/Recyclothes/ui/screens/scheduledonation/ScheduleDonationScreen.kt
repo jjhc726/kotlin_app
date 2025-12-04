@@ -19,6 +19,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.Recyclothes.connectivity.ConnectivityBanner
 import com.example.Recyclothes.connectivity.ConnectivityObserver
@@ -32,15 +34,33 @@ import com.example.Recyclothes.viewmodel.ScheduleDonationViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScheduleDonationDesign(
-    vm: ScheduleDonationViewModel = viewModel()
+    vm: ScheduleDonationViewModel = viewModel(),
+    draftId: String? = null
 ) {
     LaunchedEffect(Unit) { UsageTracker.bump(FeatureId.SCHEDULE_DONATION_OPEN) }
+    LaunchedEffect(draftId) { draftId?.let { vm.loadDraftById(it) } }
 
     val scroll = rememberScrollState()
 
     val ctx = LocalContext.current
     val observer = remember { ConnectivityObserver(ctx) }
     val online by observer.onlineFlow().collectAsState(initial = observer.isOnlineNow())
+
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_STOP) {
+                vm.persistDraftNow()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            vm.persistDraftNow()
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
 
     Column(
         modifier = Modifier
@@ -165,31 +185,43 @@ fun ScheduleDonationDesign(
 
         Spacer(Modifier.height(24.dp))
 
-        Button(
-            onClick = {
-                vm.submit(
-                    onOnlineSuccess = {
-                        Toast.makeText(ctx, "Scheduled online successfully", Toast.LENGTH_LONG).show()
-                        ctx.startActivity(Intent(ctx, MainNavigationActivity::class.java))
-                        (ctx as? Activity)?.finish()
-                    },
-                    onQueuedOffline = { msg ->
+        Row(Modifier.fillMaxWidth()) {
+            OutlinedButton(
+                onClick = {
+                    vm.saveDraftNow { msg ->
                         Toast.makeText(ctx, msg, Toast.LENGTH_LONG).show()
-                        ctx.startActivity(Intent(ctx, MainNavigationActivity::class.java))
-                        (ctx as? Activity)?.finish()
-                    },
-                    onError = { err -> Toast.makeText(ctx, err, Toast.LENGTH_LONG).show() }
-                )
-                vm.onScheduleDonationSelected()
-            },
-            colors = ButtonDefaults.buttonColors(containerColor = DeepBlue, contentColor = Color.White),
-            shape = androidx.compose.foundation.shape.RoundedCornerShape(6.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp)
-        ) {
-            Text("Confirm Schedule")
+                    }
+                }
+            ) { Text("Save draft") }
+
+            Spacer(Modifier.width(12.dp))
+
+            Button(
+                onClick = {
+                    vm.submit(
+                        onOnlineSuccess = {
+                            Toast.makeText(ctx, "Scheduled online successfully", Toast.LENGTH_LONG).show()
+                            ctx.startActivity(Intent(ctx, MainNavigationActivity::class.java))
+                            (ctx as? Activity)?.finish()
+                        },
+                        onQueuedOffline = { msg ->
+                            Toast.makeText(ctx, msg, Toast.LENGTH_LONG).show()
+                            ctx.startActivity(Intent(ctx, MainNavigationActivity::class.java))
+                            (ctx as? Activity)?.finish()
+                        },
+                        onError = { err -> Toast.makeText(ctx, err, Toast.LENGTH_LONG).show() }
+                    )
+                    vm.onScheduleDonationSelected()
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = DeepBlue, contentColor = Color.White),
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(6.dp),
+                enabled = true,
+                modifier = Modifier.weight(1f)
+                    .fillMaxWidth()
+                    .height(50.dp)
+            ) { Text("Confirm Schedule") }
         }
+
         Spacer(Modifier.height(12.dp))
     }
 }

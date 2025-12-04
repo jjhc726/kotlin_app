@@ -183,6 +183,14 @@ fun MainNavigationScreen() {
                                         context.startActivity(Intent(context, LocalDraftsActivity::class.java))
                                     }
                                 )
+                                DropdownMenuItem(
+                                    text = { Text("Schedule donation and Features usage drafts") },
+                                    onClick = {
+                                        expanded = false
+                                        context.startActivity(Intent(context, com.example.Recyclothes.ui.screens.drafts.DraftsActivity::class.java))
+                                    }
+                                )
+
 
                             }
                         }
