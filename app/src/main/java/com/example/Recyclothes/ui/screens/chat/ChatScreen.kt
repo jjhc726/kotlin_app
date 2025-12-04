@@ -9,21 +9,37 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.Recyclothes.connectivity.ConnectivityBanner
+import com.example.Recyclothes.connectivity.ConnectivityObserver
 import com.example.Recyclothes.data.model.Message
 import com.example.Recyclothes.viewmodel.ChatViewModel
+import com.example.Recyclothes.viewmodel.ChatViewModelFactory
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(
     charityName: String,
-    userId: String, // userId = email
-    viewModel: ChatViewModel = viewModel(),
+    userId: String,
     onBack: () -> Unit
 ) {
+    val context = LocalContext.current
+    val viewModel: ChatViewModel =
+        viewModel(factory = ChatViewModelFactory(context))
+    val observer = remember { ConnectivityObserver(context) }
+
+    val online by observer.onlineFlow().collectAsState(initial = observer.isOnlineNow())
+
     LaunchedEffect(charityName, userId) {
         viewModel.loadMessages(charityName, userId)
+    }
+
+    LaunchedEffect(online) {
+        if (online) {
+            viewModel.retryPending()
+        }
     }
 
     val messages by viewModel.messages.collectAsState()
@@ -42,6 +58,8 @@ fun ChatScreen(
         }
     ) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize()) {
+
+            ConnectivityBanner(online)
 
             LazyColumn(
                 modifier = Modifier.weight(1f).padding(10.dp)
@@ -64,12 +82,20 @@ fun ChatScreen(
 
                 Spacer(Modifier.width(8.dp))
 
-                Button(onClick = {
-                    if (text.isNotBlank()) {
-                        viewModel.sendMessage(charityName, userId, text)
-                        text = ""
+                Button(
+                    onClick = {
+                        if (text.isNotBlank()) {
+
+                            viewModel.sendMessage(
+                                charityName,
+                                userId,
+                                text,
+                                isOnline = online
+                            )
+                            text = ""
+                        }
                     }
-                }) {
+                ) {
                     Text("Enviar")
                 }
             }
@@ -80,20 +106,37 @@ fun ChatScreen(
 @Composable
 fun MessageBubble(msg: Message, isMine: Boolean) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = if (isMine) Arrangement.End else Arrangement.Start
     ) {
-        Surface(
-            color = if (isMine) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
-            shape = MaterialTheme.shapes.medium,
-            modifier = Modifier.padding(6.dp)
-        ) {
-            Text(
-                msg.text,
-                modifier = Modifier.padding(10.dp),
-                color = MaterialTheme.colorScheme.onPrimary
-            )
+        Column(horizontalAlignment = if (isMine) Alignment.End else Alignment.Start) {
+
+            Surface(
+                color = if (isMine) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
+                shape = MaterialTheme.shapes.medium,
+                modifier = Modifier.padding(6.dp)
+            ) {
+                Text(
+                    msg.text,
+                    modifier = Modifier.padding(10.dp),
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+            }
+
+            if (isMine) {
+                Text(
+                    text =
+                        when (msg.status) {
+                            "sending" -> "⏳"
+                            "sent" -> "✓"
+                            "error" -> "⚠ Error"
+                            else -> ""
+                        },
+                    fontSize = MaterialTheme.typography.labelSmall.fontSize,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(end = 8.dp)
+                )
+            }
         }
     }
 }

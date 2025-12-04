@@ -5,5 +5,6 @@ data class Message(
     val fromUserId: String = "",
     val toCharityId: String = "",
     val text: String = "",
-    val timestamp: Long = System.currentTimeMillis()
+    val timestamp: Long = System.currentTimeMillis(),
+    val status: String = "sent"
 )

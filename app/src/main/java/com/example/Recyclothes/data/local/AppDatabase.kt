@@ -9,6 +9,7 @@ import com.example.Recyclothes.data.dao.DonationDao
 import com.example.Recyclothes.data.dao.DonationPointDao
 import com.example.Recyclothes.data.dao.DraftDao
 import com.example.Recyclothes.data.dao.FavoriteCharityDao
+import com.example.Recyclothes.data.dao.MessageDao
 import com.example.Recyclothes.data.dao.PickupRequestDao
 import com.example.Recyclothes.data.local.dao.SeasonalCampaignDao
 import com.example.Recyclothes.data.local.entity.SeasonalCampaignEntity
@@ -22,9 +23,10 @@ import com.example.Recyclothes.data.local.entity.SeasonalCampaignEntity
         DraftDonationEntity::class,
         FavoriteCharityEntity::class,
         FavoriteOpEntity::class,
-        SeasonalCampaignEntity::class
+        SeasonalCampaignEntity::class,
+        MessageEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 
@@ -58,4 +60,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun donationDao(): DonationDao
     abstract fun pickupRequestDao(): PickupRequestDao
     abstract fun draftDao(): DraftDao
+
+    abstract fun messageDao(): MessageDao
 }
