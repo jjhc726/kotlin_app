@@ -238,7 +238,7 @@ fun PickUpAtHomeScreen(viewModel: PickupViewModel = viewModel()) {
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "You are offline. Showing local charities.",
+                            text = "You are offline. Showing local donations.",
                             color = Color(0xFF003366),
                             style = MaterialTheme.typography.bodySmall
                         )
