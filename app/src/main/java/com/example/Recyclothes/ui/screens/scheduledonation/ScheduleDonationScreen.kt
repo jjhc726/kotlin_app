@@ -4,30 +4,14 @@ import android.app.Activity
 import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuAnchorType
+import androidx.compose.material3.*
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -43,15 +27,13 @@ import com.example.Recyclothes.ui.theme.SoftBlue
 import com.example.Recyclothes.utils.UsageTracker
 import com.example.Recyclothes.viewmodel.ScheduleDonationViewModel
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScheduleDonationDesign(
     vm: ScheduleDonationViewModel = viewModel()
 ) {
-    LaunchedEffect(Unit) {
-        UsageTracker.bump(FeatureId.SCHEDULE_DONATION_OPEN)
-    }
+    LaunchedEffect(Unit) { UsageTracker.bump(FeatureId.SCHEDULE_DONATION_OPEN) }
+
     val ctx = LocalContext.current
     val scroll = rememberScrollState()
 
@@ -65,44 +47,43 @@ fun ScheduleDonationDesign(
     ) {
         Spacer(Modifier.height(16.dp))
         Text("Schedule Your Donation", fontSize = 26.sp, color = DeepBlue)
-        Text("Plan ahead when you want to deliver your items.", fontSize = 14.sp, color = DeepBlue.copy(.75f))
+        Text(
+            "Plan ahead when you want to deliver your items.",
+            fontSize = 14.sp,
+            color = DeepBlue.copy(.75f)
+        )
         Spacer(Modifier.height(24.dp))
-
 
         OutlinedTextField(
             value = vm.title.value,
-            onValueChange = { vm.title.value = it },
+            onValueChange = { vm.title.value = it; vm.onFieldEdited() },
             label = { Text("Donation Title (Required)") },
             supportingText = { vm.titleError.value?.let { Text(it, color = Color.Red) } },
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(Modifier.height(12.dp))
 
-
         OutlinedTextField(
             value = vm.date.value,
-            onValueChange = { vm.date.value = it },
+            onValueChange = { vm.date.value = it; vm.onFieldEdited() },
             label = { Text("Scheduled Donation Date (yyyy-MM-dd)") },
             supportingText = { vm.dateError.value?.let { Text(it, color = Color.Red) } },
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(Modifier.height(12.dp))
 
-
         OutlinedTextField(
             value = vm.time.value,
-            onValueChange = { vm.time.value = it },
+            onValueChange = { vm.time.value = it; vm.onFieldEdited() },
             label = { Text("Scheduled Donation Time (HH:mm)") },
             supportingText = { vm.timeError.value?.let { Text(it, color = Color.Red) } },
             modifier = Modifier.fillMaxWidth(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii)
-
         )
         Spacer(Modifier.height(12.dp))
 
-
         var expandType by remember { mutableStateOf(false) }
-        val types = listOf("Shirt","Pants","Jacket","Dress","Shoes","Accessories")
+        val types = listOf("Shirt", "Pants", "Jacket", "Dress", "Shoes", "Accessories")
         ExposedDropdownMenuBox(expanded = expandType, onExpandedChange = { expandType = !expandType }) {
             OutlinedTextField(
                 value = vm.clothingType.value,
@@ -120,17 +101,17 @@ fun ScheduleDonationDesign(
             )
             ExposedDropdownMenu(expanded = expandType, onDismissRequest = { expandType = false }) {
                 types.forEach { t ->
-                    DropdownMenuItem(text = { Text(t) }, onClick = {
-                        vm.clothingType.value = t; expandType = false
-                    })
+                    DropdownMenuItem(
+                        text = { Text(t) },
+                        onClick = { vm.clothingType.value = t; vm.onFieldEdited(); expandType = false }
+                    )
                 }
             }
         }
         Spacer(Modifier.height(12.dp))
 
-
         var expandSize by remember { mutableStateOf(false) }
-        val sizes = listOf("XS","S","M","L","XL","XXL")
+        val sizes = listOf("XS", "S", "M", "L", "XL", "XXL")
         ExposedDropdownMenuBox(expanded = expandSize, onExpandedChange = { expandSize = !expandSize }) {
             OutlinedTextField(
                 value = vm.size.value,
@@ -148,30 +129,31 @@ fun ScheduleDonationDesign(
             )
             ExposedDropdownMenu(expanded = expandSize, onDismissRequest = { expandSize = false }) {
                 sizes.forEach { s ->
-                    DropdownMenuItem(text = { Text(s) }, onClick = {
-                        vm.size.value = s; expandSize = false
-                    })
+                    DropdownMenuItem(
+                        text = { Text(s) },
+                        onClick = { vm.size.value = s; vm.onFieldEdited(); expandSize = false }
+                    )
                 }
             }
         }
         Spacer(Modifier.height(12.dp))
 
-
         OutlinedTextField(
             value = vm.brand.value,
-            onValueChange = { vm.brand.value = it },
+            onValueChange = { vm.brand.value = it; vm.onFieldEdited() },
             label = { Text("Brand (Required)") },
             supportingText = { vm.brandError.value?.let { Text(it, color = Color.Red) } },
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(Modifier.height(12.dp))
 
-
         OutlinedTextField(
             value = vm.note.value,
-            onValueChange = { vm.note.value = it },
+            onValueChange = { vm.note.value = it; vm.onFieldEdited() },
             label = { Text("Additional Notes") },
-            modifier = Modifier.fillMaxWidth().height(100.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(100.dp),
             maxLines = 5
         )
 
@@ -190,15 +172,15 @@ fun ScheduleDonationDesign(
                         ctx.startActivity(Intent(ctx, MainNavigationActivity::class.java))
                         (ctx as? Activity)?.finish()
                     },
-                    onError = { err ->
-                        Toast.makeText(ctx, err, Toast.LENGTH_LONG).show()
-                    }
+                    onError = { err -> Toast.makeText(ctx, err, Toast.LENGTH_LONG).show() }
                 )
                 vm.onScheduleDonationSelected()
             },
             colors = ButtonDefaults.buttonColors(containerColor = DeepBlue, contentColor = Color.White),
             shape = androidx.compose.foundation.shape.RoundedCornerShape(6.dp),
-            modifier = Modifier.fillMaxWidth().height(50.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp)
         ) {
             Text("Confirm Schedule")
         }
