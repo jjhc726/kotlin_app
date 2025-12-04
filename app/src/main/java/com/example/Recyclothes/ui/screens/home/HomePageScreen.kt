@@ -22,6 +22,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.Recyclothes.connectivity.ConnectivityBanner
+import com.example.Recyclothes.connectivity.ConnectivityObserver
 import com.example.Recyclothes.data.repository.UserRepository
 import com.example.Recyclothes.ui.screens.quickDonation.QuickDonationActivity
 import com.example.Recyclothes.ui.screens.scheduledonation.ScheduleDonationActivity
@@ -49,6 +51,10 @@ fun HomePageScreen() {
     var showNotifications by remember { mutableStateOf(false) }
     var firstLoad by remember { mutableStateOf(true) }
     val observer = remember { NetworkObserver(context) }
+
+    val ctx = LocalContext.current
+    val observer2 = remember { ConnectivityObserver(ctx) }
+    val online by observer2.onlineFlow().collectAsState(initial = observer2.isOnlineNow())
 
     DisposableEffect(Unit) {
         val callback = observer.registerCallback(
@@ -84,6 +90,7 @@ fun HomePageScreen() {
             .verticalScroll(scrollState),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        ConnectivityBanner(online = online)
         HomeContent(
             topDonors = topDonors,
             lastDonationText = lastDonationText,
