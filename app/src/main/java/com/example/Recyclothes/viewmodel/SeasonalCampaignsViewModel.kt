@@ -1,14 +1,18 @@
 package com.example.Recyclothes.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import android.net.ConnectivityManager
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.Recyclothes.data.model.SeasonalCampaign
 import com.example.Recyclothes.data.repository.InteractionRepository
+import com.example.Recyclothes.utils.NetworkObserver
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class SeasonalCampaignsViewModel : ViewModel() {
+class SeasonalCampaignsViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _campaigns = MutableStateFlow<List<SeasonalCampaign>>(emptyList())
     val campaigns: StateFlow<List<SeasonalCampaign>> = _campaigns
@@ -18,6 +22,25 @@ class SeasonalCampaignsViewModel : ViewModel() {
 
     init {
         loadCampaigns()
+    }
+
+    private val network = NetworkObserver(application)
+
+    private val _networkStatus = MutableStateFlow(network.isOnline())
+    val networkStatus: StateFlow<Boolean> = _networkStatus.asStateFlow()
+
+    private var networkCallback: ConnectivityManager.NetworkCallback? = null
+
+    fun startNetworkObserver() {
+        networkCallback = network.registerCallback(
+            onAvailable = { _networkStatus.value = true },
+            onLost = { _networkStatus.value = false }
+        )
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        networkCallback?.let { network.unregisterCallback(it) }
     }
 
     private fun loadCampaigns() {
