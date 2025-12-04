@@ -25,33 +25,53 @@ import com.example.Recyclothes.ui.theme.SoftBlue
 import com.example.Recyclothes.ui.theme.TealDark
 import com.example.Recyclothes.viewmodel.LeastUsedUi
 import com.example.Recyclothes.viewmodel.UsageFeaturesViewModel
-import com.example.Recyclothes.viewmodel.FeaturesUsageViewModel
-import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun UsageFeaturesScreen(
-    analyticsVm: UsageFeaturesViewModel = viewModel(),
-    eventsVm: FeaturesUsageViewModel = viewModel()
+    vm: UsageFeaturesViewModel = viewModel()
 ) {
-    LaunchedEffect(Unit) { analyticsVm.loadLeastUsedThisWeek() }
-
-    val least by analyticsVm.leastUsed.collectAsState()
     val ctx = LocalContext.current
-
     val observer = remember { ConnectivityObserver(ctx) }
     val online by observer.onlineFlow().collectAsState(initial = observer.isOnlineNow())
 
-    var submitting by remember { mutableStateOf(false) }
-    var submittedOk by remember { mutableStateOf<Boolean?>(null) }
-    var submittedMsg by remember { mutableStateOf("") }
+    val selected by vm.selected.collectAsState()
+    val why by vm.why.collectAsState()
+    val submitting by vm.submitting.collectAsState()
+    val submittedOk by vm.submittedOk.collectAsState()
+    val least by vm.leastUsed.collectAsState()
 
-    fun goHome() {
-        val act = ctx as? Activity
-        ctx.startActivity(
-            Intent(ctx, MainNavigationActivity::class.java)
-                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
-        )
-        act?.finish()
+    LaunchedEffect(Unit) { vm.loadLeastUsedThisWeek() }
+
+    DisposableEffect(Unit) {
+        onDispose { vm.persistDraftNow() }
+    }
+
+    var showResultBanner by remember { mutableStateOf(false) }
+    var resultText by remember { mutableStateOf("") }
+    var resultColor by remember { mutableStateOf(BannerColor.Info) }
+
+    LaunchedEffect(submittedOk) {
+        when (submittedOk) {
+            true -> {
+                showResultBanner = true
+                resultText = "Thanks! Your feedback was sent."
+                resultColor = BannerColor.Success
+                kotlinx.coroutines.delay(900)
+                showResultBanner = false
+                vm.clearSubmittedFlag()
+                goHome(ctx)
+            }
+            false -> {
+                showResultBanner = true
+                resultText = "No internet. Your feedback was saved and will be sent when you’re back online."
+                resultColor = BannerColor.Warning
+                kotlinx.coroutines.delay(1200)
+                showResultBanner = false
+                vm.clearSubmittedFlag()
+                goHome(ctx)
+            }
+            null -> Unit
+        }
     }
 
     Surface(color = SoftBlue) {
@@ -63,50 +83,55 @@ fun UsageFeaturesScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             ConnectivityBanner(online = online)
+            if (showResultBanner) SubmissionBanner(text = resultText, color = resultColor)
+
             HeaderTitle()
-
             Spacer(Modifier.height(16.dp))
-
             FeatureLeastUsedSection(least)
-
             Spacer(Modifier.height(24.dp))
 
-            val featureOptions: List<FeatureId> =
-                if (least.isNotEmpty()) least.map { it.featureId } else FeatureId.entries.toList()
-
             FeedbackCard(
-                options = featureOptions,
+                options = FeatureId.entries.toList(),
+                selected = selected,
+                why = why,
                 submitting = submitting,
-                submittedOk = submittedOk,
-                onSubmit = { fid, why ->
-                    submitting = true
-                    val email = FirebaseAuth.getInstance().currentUser?.email ?: "anonymous@local"
-                    eventsVm.submitFeedback(
-                        userEmail = email,
-                        featureName = fid.label,
-                        why = why,
-                        onOnlineOk = {
-                            submitting = false
-                            submittedOk = true
-                            submittedMsg = "Thanks! Your feedback was sent."
-                        },
-                        onQueuedOffline = {
-                            submitting = false
-                            submittedOk = true
-                            submittedMsg = "Saved offline. It will be sent when you’re back online."
-                        }
-                    )
-                },
-                onDismissSubmitted = {
-                    submittedOk = null
-                    submittedMsg = ""
-                },
-                onNavigateHome = { goHome() },
-                customMessage = submittedMsg
+                onSelect = vm::onFeatureSelected,
+                onWhyChange = vm::onWhyChanged,
+                onSubmit = { fid, text -> vm.submitFeedback(fid, text) }
             )
         }
     }
 }
+
+private fun goHome(ctx: android.content.Context) {
+    val act = ctx as? Activity
+    ctx.startActivity(
+        Intent(ctx, MainNavigationActivity::class.java)
+            .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+    )
+    act?.finish()
+}
+
+@Composable
+private fun SubmissionBanner(text: String, color: BannerColor) {
+    val container = when (color) {
+        BannerColor.Success -> MaterialTheme.colorScheme.primaryContainer
+        BannerColor.Warning -> MaterialTheme.colorScheme.tertiaryContainer
+        BannerColor.Info    -> MaterialTheme.colorScheme.secondaryContainer
+    }
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 8.dp),
+        colors = CardDefaults.cardColors(containerColor = container),
+        shape = RoundedCornerShape(10.dp),
+        elevation = CardDefaults.cardElevation(2.dp)
+    ) {
+        Text(text, modifier = Modifier.padding(12.dp))
+    }
+}
+
+private enum class BannerColor { Success, Warning, Info }
 
 @Composable
 private fun HeaderTitle() {
@@ -149,7 +174,7 @@ private fun FeatureLeastUsedSection(items: List<LeastUsedUi>) {
             Text("No data yet for this week.", color = MediumBlue)
         }
     } else {
-        items.take(3).forEachIndexed { idx, item ->
+        items.forEachIndexed { idx, item ->
             Spacer(Modifier.height(12.dp))
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -180,16 +205,14 @@ private fun FeatureLeastUsedSection(items: List<LeastUsedUi>) {
 @Composable
 private fun FeedbackCard(
     options: List<FeatureId>,
+    selected: FeatureId?,
+    why: String,
     submitting: Boolean,
-    submittedOk: Boolean?,
-    onSubmit: (FeatureId, String) -> Unit,
-    onDismissSubmitted: () -> Unit,
-    onNavigateHome: () -> Unit,
-    customMessage: String
+    onSelect: (FeatureId) -> Unit,
+    onWhyChange: (String) -> Unit,
+    onSubmit: (FeatureId?, String) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
-    var selected by remember { mutableStateOf(options.firstOrNull()) }
-    var why by remember { mutableStateOf("") }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -198,21 +221,10 @@ private fun FeedbackCard(
         shape = RoundedCornerShape(18.dp)
     ) {
         Column(Modifier.padding(16.dp)) {
-            Text(
-                "Quick survey",
-                color = DeepBlue,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(Modifier.height(6.dp))
-            Text("Which feature should we improve, and why?")
-
+            Text("Quick survey", color = DeepBlue, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(14.dp))
 
-            ExposedDropdownMenuBox(
-                expanded = expanded,
-                onExpandedChange = { expanded = !expanded }
-            ) {
+            ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
                 OutlinedTextField(
                     value = selected?.label ?: "",
                     onValueChange = {},
@@ -226,18 +238,11 @@ private fun FeedbackCard(
                             enabled = true
                         )
                 )
-                ExposedDropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
-                ) {
+                ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                     options.forEach { fid ->
-                        DropdownMenuItem(
-                            text = { Text(fid.label) },
-                            onClick = {
-                                selected = fid
-                                expanded = false
-                            }
-                        )
+                        DropdownMenuItem(text = { Text(fid.label) }, onClick = {
+                            onSelect(fid); expanded = false
+                        })
                     }
                 }
             }
@@ -246,34 +251,17 @@ private fun FeedbackCard(
 
             OutlinedTextField(
                 value = why,
-                onValueChange = { why = it },
+                onValueChange = onWhyChange,
                 label = { Text("Why should we improve it?") },
                 modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(Modifier.height(12.dp))
             Button(
-                onClick = { selected?.let { onSubmit(it, why) } },
-                enabled = selected != null && why.isNotBlank() && !submitting
+                onClick = { onSubmit(selected, why) },
+                enabled = (selected != null && why.isNotBlank() && !submitting)
             ) {
                 if (submitting) CircularProgressIndicator() else Text("Send feedback")
-            }
-
-            when (submittedOk) {
-                true -> {
-                    Spacer(Modifier.height(8.dp))
-                    Text(customMessage, color = DeepBlue)
-                    LaunchedEffect(Unit) {
-                        kotlinx.coroutines.delay(900)
-                        onDismissSubmitted()
-                        onNavigateHome()
-                    }
-                }
-                false -> {
-                    Spacer(Modifier.height(8.dp))
-                    Text("We couldn’t send it. Please try again.", color = DeepBlue)
-                }
-                null -> Unit
             }
         }
     }

@@ -20,6 +20,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.Recyclothes.connectivity.ConnectivityBanner
+import com.example.Recyclothes.connectivity.ConnectivityObserver
 import com.example.Recyclothes.data.model.FeatureId
 import com.example.Recyclothes.ui.screens.main.MainNavigationActivity
 import com.example.Recyclothes.ui.theme.DeepBlue
@@ -34,8 +36,11 @@ fun ScheduleDonationDesign(
 ) {
     LaunchedEffect(Unit) { UsageTracker.bump(FeatureId.SCHEDULE_DONATION_OPEN) }
 
-    val ctx = LocalContext.current
     val scroll = rememberScrollState()
+
+    val ctx = LocalContext.current
+    val observer = remember { ConnectivityObserver(ctx) }
+    val online by observer.onlineFlow().collectAsState(initial = observer.isOnlineNow())
 
     Column(
         modifier = Modifier
@@ -45,6 +50,7 @@ fun ScheduleDonationDesign(
             .padding(20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        ConnectivityBanner(online = online)
         Spacer(Modifier.height(16.dp))
         Text("Schedule Your Donation", fontSize = 26.sp, color = DeepBlue)
         Text(
