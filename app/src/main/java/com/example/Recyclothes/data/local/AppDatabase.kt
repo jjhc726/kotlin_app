@@ -24,7 +24,7 @@ import com.example.Recyclothes.data.local.entity.SeasonalCampaignEntity
         FavoriteOpEntity::class,
         SeasonalCampaignEntity::class
     ],
-    version = 4,
+    version = 1,
     exportSchema = false
 )
 

@@ -10,7 +10,8 @@ class PendingPickupsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            PendingPickupsScreen()
+            PendingPickupsScreen(onBack = { finish() })
+
         }
     }
 }
