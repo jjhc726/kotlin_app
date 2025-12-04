@@ -41,9 +41,10 @@ class DonationViewModel(
     private val userRepo = UserRepository()
     private val prefs = PreferenceHelper(app.applicationContext)
 
-    // ------------------------------------------------------------------------
-    // 1. AQUÍ SE ARREGLA: Se reemplaza Bitmap por URI
-    // ------------------------------------------------------------------------
+    private var draftWasSaved = false
+
+    private var donationWasUploaded = false
+
     val capturedImageUri = state.getStateFlow<Uri?>(
         "capturedImageUri",
         prefs.loadUri("capturedImageUri")
@@ -70,9 +71,6 @@ class DonationViewModel(
         prefs.loadList("selectedTags")
     )
 
-    // ------------------------------------------------------------------------
-    // IMAGEN DESDE CÁMARA / GALERÍA
-    // ------------------------------------------------------------------------
     fun updateImageUri(uri: Uri?) {
         state["capturedImageUri"] = uri
         prefs.saveUri("capturedImageUri", uri)
@@ -238,6 +236,7 @@ class DonationViewModel(
             if (!net) {
                 repository.insertPending(localDonation)
                 withContext(Dispatchers.Main) {
+                    donationWasUploaded = true
                     clearAll()
                     onResult(true, true, "Donation saved offline.")
                 }
@@ -248,11 +247,15 @@ class DonationViewModel(
                 val uploaded = repository.uploadDonation(donationItem, email)
                 withContext(Dispatchers.Main) {
                     if (uploaded) {
+                        repository.incrementDonationSubmit()
+                        donationWasUploaded = true
                         clearAll()
                         onResult(true, false, "Donation uploaded successfully.")
                     } else {
+                        repository.incrementDonationSubmit()
                         onResult(true, true, "Donation saved offline.")
                     }
+
                 }
             } catch (e: Exception) {
                 repository.insertPending(localDonation)
@@ -317,6 +320,8 @@ class DonationViewModel(
                 editingDraftId = repository.insertDraft(draft)
             else
                 repository.updateDraft(draft)
+            draftWasSaved = true
+            repository.incrementExitDraft()
         }
     }
 
@@ -348,4 +353,13 @@ class DonationViewModel(
             null
         }
     }
+
+    fun handleScreenExit() {
+        viewModelScope.launch {
+            if (!draftWasSaved && !donationWasUploaded) {
+                repository.incrementExitDraft()
+            }
+        }
+    }
+
 }
