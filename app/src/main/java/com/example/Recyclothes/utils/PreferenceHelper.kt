@@ -1,16 +1,17 @@
 package com.example.Recyclothes.utils
 
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.util.Base64
-import java.io.ByteArrayOutputStream
+import android.net.Uri
 import androidx.core.content.edit
+import androidx.core.net.toUri
 
 class PreferenceHelper(context: Context) {
 
     private val prefs = context.getSharedPreferences("donation_prefs", Context.MODE_PRIVATE)
 
+    // ---------------------------------------------------------
+    // STRINGS
+    // ---------------------------------------------------------
     fun save(key: String, value: String) {
         prefs.edit { putString(key, value) }
     }
@@ -19,6 +20,9 @@ class PreferenceHelper(context: Context) {
         return prefs.getString(key, "") ?: ""
     }
 
+    // ---------------------------------------------------------
+    // LISTAS
+    // ---------------------------------------------------------
     fun saveList(key: String, list: List<String>) {
         prefs.edit { putString(key, list.joinToString(",")) }
     }
@@ -28,23 +32,18 @@ class PreferenceHelper(context: Context) {
         return if (raw.isBlank()) emptyList() else raw.split(",")
     }
 
-    fun saveBitmap(key: String, bitmap: Bitmap?) {
-        if (bitmap == null) {
+    fun saveUri(key: String, uri: Uri?) {
+        if (uri == null) {
             prefs.edit { remove(key) }
-            return
+        } else {
+            prefs.edit { putString(key, uri.toString()) }
         }
-        val stream = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 80, stream)
-        val encoded = Base64.encodeToString(stream.toByteArray(), Base64.DEFAULT)
-        prefs.edit { putString(key, encoded) }
     }
 
-    fun loadBitmap(key: String): Bitmap? {
-        val encoded = prefs.getString(key, null) ?: return null
-        val bytes = Base64.decode(encoded, Base64.DEFAULT)
-        return BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+    fun loadUri(key: String): Uri? {
+        val raw = prefs.getString(key, null) ?: return null
+        return raw.toUri()
     }
-
     fun clearAll() {
         prefs.edit { clear() }
     }
