@@ -44,6 +44,7 @@ android {
 }
 
 dependencies {
+    implementation("io.coil-kt:coil-compose:2.6.0")
     implementation(libs.androidx.animation)
     implementation(libs.androidx.runtime)
     implementation(libs.androidx.work.runtime.ktx)
