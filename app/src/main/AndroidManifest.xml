@@ -42,6 +42,7 @@
         <activity android:name=".ui.screens.main.MainNavigationActivity"/>
         <activity android:name=".ui.screens.usagefeatures.UsageFeaturesActivity" />
         <activity android:name=".ui.screens.localdrafts.LocalDraftsActivity" />
+        <activity android:name=".ui.screens.chat.ChatActivity" />
 
         <activity
             android:name=".MainActivity"

@@ -38,11 +38,14 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.Recyclothes.connectivity.ConnectivityBanner
 import com.example.Recyclothes.data.model.Charity
+import com.example.Recyclothes.data.repository.UserRepository
+import com.example.Recyclothes.ui.screens.chat.ChatActivity
 import com.example.Recyclothes.ui.theme.DeepBlue
 import com.example.Recyclothes.ui.theme.SoftBlue
 import com.example.Recyclothes.ui.theme.TealMedium
 import com.example.Recyclothes.ui.theme.White
 import com.example.Recyclothes.viewmodel.CharityViewModel
+import kotlin.jvm.java
 
 @Composable
 fun CharityProfileScreen(
@@ -170,7 +173,20 @@ fun CharityProfileScreen(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-
+        Button(
+            onClick = {
+                val intent = Intent(context, ChatActivity::class.java).apply {
+                    putExtra("charityId", charity.id)
+                    putExtra("charityName", charity.name)
+                    val userEmail = UserRepository().currentEmail() ?: "anon"
+                    putExtra("userId", userEmail)
+                }
+                context.startActivity(intent)
+            },
+            colors = ButtonDefaults.buttonColors(containerColor = TealMedium)
+        ) {
+            Text("Chat", color = White)
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
