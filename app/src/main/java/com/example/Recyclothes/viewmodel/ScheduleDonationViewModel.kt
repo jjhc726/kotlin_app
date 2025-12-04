@@ -7,11 +7,10 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.Recyclothes.connectivity.ConnectivityObserver
 import com.example.Recyclothes.data.remote.ScheduledDonationDto
-import com.example.Recyclothes.data.remote.ScheduleDonationDraft
 import com.example.Recyclothes.data.repository.EngagementRepository
 import com.example.Recyclothes.data.repository.OfflineScheduledDonationRepository
-import com.example.Recyclothes.data.repository.ScheduleDonationDraftRepository
 import com.example.Recyclothes.data.repository.ScheduleDonationRepository
+import com.example.Recyclothes.data.repository.ScheduleDonationDraftRepository
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -23,18 +22,15 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
 
-@OptIn(FlowPreview::class)
 class ScheduleDonationViewModel(app: Application) : AndroidViewModel(app) {
 
-    val title         = mutableStateOf("")
-    val date          = mutableStateOf("")
-    val time          = mutableStateOf("")
-    val note          = mutableStateOf("")
-    val clothingType  = mutableStateOf("")
-    val size          = mutableStateOf("")
-    val brand         = mutableStateOf("")
-
-    private val net = ConnectivityObserver(app)
+    val title = mutableStateOf("")
+    val date = mutableStateOf("")
+    val time = mutableStateOf("")
+    val note = mutableStateOf("")
+    val clothingType = mutableStateOf("")
+    val size = mutableStateOf("")
+    val brand = mutableStateOf("")
 
     val titleError = mutableStateOf<String?>(null)
     val dateError  = mutableStateOf<String?>(null)
@@ -43,60 +39,66 @@ class ScheduleDonationViewModel(app: Application) : AndroidViewModel(app) {
     val sizeError  = mutableStateOf<String?>(null)
     val brandError = mutableStateOf<String?>(null)
 
-    private val onlineRepo  = ScheduleDonationRepository()
-    private val offlineRepo = OfflineScheduledDonationRepository(app)
-    private val draftRepo   = ScheduleDonationDraftRepository(app)
+    private val onlineRepo   = ScheduleDonationRepository()
+    private val offlineRepo  = OfflineScheduledDonationRepository(app)
+    private val draftRepo    = ScheduleDonationDraftRepository(app)
     private val engagementRepo = EngagementRepository()
+    private val net = ConnectivityObserver(app)
 
     private val autoSave = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
-    init {
-        net.onlineFlow().onEach { isOnline ->
-            if (isOnline) {
-                viewModelScope.launch { offlineRepo.flushPending(onlineRepo) }
-            }
-        }.launchIn(viewModelScope)
+    private fun stableDraftKey(): String =
+        sessionEmail() ?: "schedule_donation_global"
 
+    init {
         viewModelScope.launch {
-            draftRepo.load(draftKey())?.let { applyDraft(it) }
+            draftRepo.load(stableDraftKey())?.let { d ->
+                title.value = d.title
+                date.value  = d.date
+                time.value  = d.time
+                note.value  = d.note
+                clothingType.value = d.clothingType
+                size.value  = d.size
+                brand.value = d.brand
+            }
+            setupAutosave()
         }
 
-        autoSave
-            .debounce(400)
-            .onEach { draftRepo.save(draftKey(), currentDraft()) }
-            .launchIn(viewModelScope)
+        net.onlineFlow().onEach { isOnline ->
+            if (isOnline) viewModelScope.launch { offlineRepo.flushPending(onlineRepo) }
+        }.launchIn(viewModelScope)
     }
-
-    fun onFieldEdited() { autoSave.tryEmit(Unit) }
 
     private fun sessionEmail(): String? =
         FirebaseAuth.getInstance().currentUser?.email
             ?: getApplication<Application>()
                 .getSharedPreferences("session", Context.MODE_PRIVATE)
                 .getString("email", null)
-                ?.trim()
-                ?.lowercase()
+                ?.trim()?.lowercase()
 
-    private fun draftKey(): String = (sessionEmail() ?: "guest").lowercase()
+    @OptIn(FlowPreview::class)
+    private fun setupAutosave() {
+        autoSave
+            .debounce(400)
+            .onEach {
+                draftRepo.save(
+                    stableDraftKey(),
+                    com.example.Recyclothes.data.remote.ScheduleDonationDraft(
+                        title = title.value,
+                        date  = date.value,
+                        time  = time.value,
+                        note  = note.value,
+                        clothingType = clothingType.value,
+                        size  = size.value,
+                        brand = brand.value
+                    )
+                )
+            }
+            .launchIn(viewModelScope)
+    }
 
-    private fun currentDraft() = ScheduleDonationDraft(
-        title = title.value,
-        date  = date.value,
-        time  = time.value,
-        note  = note.value,
-        clothingType = clothingType.value,
-        size  = size.value,
-        brand = brand.value
-    )
-
-    private fun applyDraft(d: ScheduleDonationDraft) {
-        title.value = d.title
-        date.value  = d.date
-        time.value  = d.time
-        note.value  = d.note
-        clothingType.value = d.clothingType
-        size.value  = d.size
-        brand.value = d.brand
+    fun onFieldEdited() {
+        autoSave.tryEmit(Unit)
     }
 
     private fun parseDateTimeMillis(date: String, time: String): Long? = try {
@@ -108,13 +110,24 @@ class ScheduleDonationViewModel(app: Application) : AndroidViewModel(app) {
 
     private fun validate(): Boolean {
         var ok = true
-        if (title.value.isBlank())       { titleError.value = "Required"; ok = false } else titleError.value = null
-        if (date.value.isBlank())        { dateError.value  = "Required"; ok = false }  else dateError.value = null
-        if (time.value.isBlank())        { timeError.value  = "Required"; ok = false }  else timeError.value = null
-        if (clothingType.value.isBlank()){ typeError.value  = "Required"; ok = false }  else typeError.value = null
-        if (size.value.isBlank())        { sizeError.value  = "Required"; ok = false }  else sizeError.value = null
-        if (brand.value.isBlank())       { brandError.value = "Required"; ok = false }  else brandError.value = null
+        fun req(s: String, setErr: (String?) -> Unit) =
+            if (s.isBlank()) { setErr("Required"); ok = false } else setErr(null)
+
+        req(title.value){ titleError.value = it }
+        req(date.value ){ dateError.value  = it }
+        req(time.value ){ timeError.value  = it }
+        req(clothingType.value){ typeError.value = it }
+        req(size.value ){ sizeError.value  = it }
+        req(brand.value){ brandError.value = it }
         return ok
+    }
+
+    private suspend fun clearDraftAndResetForm() {
+        draftRepo.clear(stableDraftKey())
+        title.value = ""; date.value = ""; time.value = ""; note.value = ""
+        clothingType.value = ""; size.value = ""; brand.value = ""
+        titleError.value = null; dateError.value = null; timeError.value = null
+        typeError.value = null; sizeError.value = null; brandError.value = null
     }
 
     fun submit(
@@ -122,17 +135,13 @@ class ScheduleDonationViewModel(app: Application) : AndroidViewModel(app) {
         onQueuedOffline: (String) -> Unit,
         onError: (String) -> Unit
     ) = viewModelScope.launch {
-        if (!validate()) {
-            onError("Please fix the highlighted fields.")
-            return@launch
-        }
-        val email = sessionEmail()
-        if (email.isNullOrBlank()) {
+        if (!validate()) { onError("Please fix the highlighted fields."); return@launch }
+
+        val email = sessionEmail() ?: run {
             onError("No active session; please log in.")
             return@launch
         }
-        val millis = parseDateTimeMillis(date.value, time.value)
-        if (millis == null) {
+        val millis = parseDateTimeMillis(date.value, time.value) ?: run {
             onError("Date/Time must be yyyy-MM-dd and HH:mm.")
             return@launch
         }
@@ -149,9 +158,8 @@ class ScheduleDonationViewModel(app: Application) : AndroidViewModel(app) {
                 userEmail = email
             )
         )
-
         if (ok) {
-            draftRepo.clear(draftKey())
+            clearDraftAndResetForm()
             onOnlineSuccess()
         } else {
             offlineRepo.queue(
@@ -164,6 +172,7 @@ class ScheduleDonationViewModel(app: Application) : AndroidViewModel(app) {
                 size = size.value,
                 brand = brand.value
             )
+            clearDraftAndResetForm()
             onQueuedOffline("No connectivity. Saved offline and will sync later.")
         }
     }

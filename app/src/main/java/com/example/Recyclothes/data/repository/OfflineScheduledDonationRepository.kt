@@ -96,10 +96,12 @@ class OfflineScheduledDonationRepository(ctx: Context) {
             val batch = readBatch()
             if (batch.isEmpty()) break
             for (row in batch) {
-                val ok = onlineRepo.create(requestId = row.requestId, dto = row.dto)
+                val ok = onlineRepo.create(row.dto)
                 if (ok) {
                     deleteById(row.requestId)
                     sent++
+                } else {
+                    return@withContext sent
                 }
             }
         }

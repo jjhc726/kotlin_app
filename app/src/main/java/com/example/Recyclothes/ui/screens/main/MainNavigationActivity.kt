@@ -62,8 +62,6 @@ import com.example.Recyclothes.viewmodel.NotificationsViewModel
 import com.example.Recyclothes.viewmodel.SeasonalCampaignsViewModel
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.lifecycleScope
-import com.example.Recyclothes.connectivity.ConnectivityBanner
-import com.example.Recyclothes.connectivity.ConnectivityObserver
 import com.example.Recyclothes.data.model.Charity
 import com.example.Recyclothes.data.model.FeatureId
 import com.example.Recyclothes.data.repository.DonationRepository
@@ -127,8 +125,7 @@ fun MainNavigationScreen() {
     var showNotifications by remember { mutableStateOf(false) }
     val notifSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    val observer = remember { ConnectivityObserver(context) }
-    val online by observer.onlineFlow().collectAsState(initial = observer.isOnlineNow())
+
 
     Scaffold(
         topBar = {
@@ -261,7 +258,6 @@ fun MainNavigationScreen() {
         }
     ) { innerPadding ->
 
-        ConnectivityBanner(online = online)
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -305,8 +301,6 @@ fun MainNavigationScreen() {
                 BottomNavItem.PickUp -> PickUpAtHomeScreen()
             }
 
-            ConnectivityBanner(online = online)
-            Spacer(Modifier.height(20.dp ))
 
             if (showNotifications) {
                 ModalBottomSheet(
